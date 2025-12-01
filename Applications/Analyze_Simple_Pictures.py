@@ -7,11 +7,26 @@ import os
 from scipy import constants
 import glob
 import datetime
+import DMDanalysis
+
+DA = DMDanalysis.DMDanalysis()
 
 paths = [
-    r'D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data\2025\02-2025\27 Feb 2025\FLIR\IR sample data',
+    r'D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data\2025\02-2025\27 Feb 2025\FLIR\Second pass evap LowServo 0.5 V',
     ]
+
 PPI = 1
+doPlot = 0
+angle = 0
+pixSize = 3.75 #um/px
+
+
+rowstart=900
+rowend=1100
+columnstart=750
+columnend=1050
+
+
 filetype = '.pgm'
 examRange = [None, None]
 filterLists = [[]]
@@ -82,4 +97,43 @@ dfpaths = catalogue[['FolderPath', 'FirstImg']]
 
 imgPaths = ImageAnalysisCode.FillFilePathsListFLIR(dfpaths, PPI)        
 rawImgs = ImageAnalysisCode.loadSeriesPGMV2(imgPaths, file_encoding='binary')
-rawImgs = rawImgs.reshape( -1, PPI, *rawImgs.shape[-2:] ) 
+rawImgs = rawImgs.reshape( -1, PPI, *rawImgs.shape[-2:] )
+
+
+# analyze raw images with Gaussian
+catalogue[['Xcenter', 'Ycenter', 'Xwidth', 'Ywidth']]=np.nan
+
+for index, img in enumerate(rawImgs):
+    img = img.squeeze()
+
+    paramX, paramY = DA.FitGaussian(img[rowstart:rowend, columnstart:columnend], doPlot)
+
+    Xcenter = paramX[0]*pixSize
+    Xwidth = paramX[1]*pixSize
+
+    Ycenter = paramY[0]*pixSize
+    Ywidth = paramY[1]*pixSize
+    
+    rowInd = catalogue.index[index]
+    
+    catalogue.loc[rowInd, 'Xcenter'] = Xcenter
+    catalogue.loc[rowInd, 'Ycenter'] = Ycenter
+    catalogue.loc[rowInd, 'Xwidth'] = Xwidth
+    catalogue.loc[rowInd, 'Ywidth'] = Ywidth
+    
+#%%
+ImageAnalysisCode.PlotResults(catalogue, 'wait', 'Xcenter', 
+                                    groupbyX=1, 
+                                  threeD=0,
+                                  figSize = 0.5
+                                  )
+
+ImageAnalysisCode.PlotResults(catalogue, 'wait', 'Ycenter', 
+                                    groupbyX=1, 
+                                  threeD=0,
+                                  figSize = 0.5
+                                  )
+
+    
+    
+    

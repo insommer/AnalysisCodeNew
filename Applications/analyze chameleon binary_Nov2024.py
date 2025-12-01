@@ -28,12 +28,12 @@ plt.close('all')
 ####################################
 #Set the date and the folder name
 ####################################
-date = '2/13/2025'
+date = '2/21/2025'
 data_path =r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 
 # data_folder = r'/FLIR/Atom cloud for overlap'
-data_folder = r'/FLIR/ODT high power crossing angle'
-# data_folder = r'/FLIR/Evap cloud size MF'
+# data_folder = r'/FLIR/ODT high power crossing angle'
+data_folder = r'/FLIR/Chop cloud_1'
 
 # plt.rcParams['image.interpolation'] = 'nearest'
 
@@ -51,6 +51,7 @@ variablesToDisplay = [
     # 'LS_width',
     'wait',
     'LowServo1',
+    'LS_width',
     # 'TOF',
     # 'Evap_timestep'
     # 'LS_width',
@@ -82,10 +83,10 @@ rowend = 900
 columnstart = 450
 columnend = 900
 
-rowstart_rot = 1
-rowend_rot = -1
-columnstart_rot = 1
-columnend_rot = -1
+rowstart_rot = 800
+rowend_rot = 1000
+columnstart_rot = 650
+columnend_rot = 1150
 
 binsize=1
 radius = 500
@@ -119,8 +120,8 @@ if variableFilterList:
     images_array = np.delete(images_array, filterList, 0)
     logTime = list(np.delete(logTime, filterList, 0))
 
-ImageAnalysisCode.ShowImagesTranspose(images_array, logTime, variableLog, 
-                                      variablesToDisplay, showTimestamp=showTimestamp)
+# ImageAnalysisCode.ShowImagesTranspose(images_array, logTime, variableLog, 
+#                                       variablesToDisplay, showTimestamp=showTimestamp)
 
 
 
@@ -203,14 +204,14 @@ results = results.set_index('time')
 #                                   figSize = 0.5
 #                                   )
 
-ImageAnalysisCode.PlotFromDataCSV(results, 'LowServo1', 'atomNum', 
-                                  # iterateVariable='VerticalBiasCurrent', 
-                                  # filterByAnd=['VerticalBiasCurrent>7.6', 'VerticalBiasCurrent<8'],
-                                  # groupby='ODT_Position', 
-                                    groupbyX=1, 
-                                  threeD=0,
-                                  figSize = 0.5
-                                  )
+# ImageAnalysisCode.PlotFromDataCSV(results, 'LowServo1', 'atomNum', 
+#                                   # iterateVariable='VerticalBiasCurrent', 
+#                                   # filterByAnd=['VerticalBiasCurrent>7.6', 'VerticalBiasCurrent<8'],
+#                                   # groupby='ODT_Position', 
+#                                     groupbyX=1, 
+#                                   threeD=0,
+#                                   figSize = 0.5
+#                                   )
 
 # ImageAnalysisCode.PlotFromDataCSV(results, 'TOF', 'Ycenter', 
 #                                   # iterateVariable='VerticalBiasCurrent', 

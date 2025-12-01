@@ -1507,7 +1507,7 @@ def absImagingSimple(abs_img_data, params=None, firstFrame=0, correctionFactorIn
     """
     iteration, picsPerIteration, rows, cols = np.shape(abs_img_data)
     
-    ratio_array = np.zeros((iteration, rows, cols), dtype=np.float64)
+    ratio_array = np.zeros((iteration, rows, cols), dtype=np.float32)
     columnDensities = np.zeros((iteration, rows, cols))
     N_abs = np.zeros((iteration))
     Number_of_atoms = np.zeros((iteration))
@@ -1610,7 +1610,7 @@ def absImagingSimpleV2(rawImgs, firstFrame=0, correctionFactorInput=1,
 
     """
     
-    rawImgs = rawImgs.astype(np.float64)
+    rawImgs = rawImgs.astype(np.float32)
 
     if subtract_burntin:
         subtracted1 = rawImgs[:, firstFrame+1, :, :] - rawImgs[:, firstFrame+0, :, :]  # with_atom - burnt_in
@@ -2343,7 +2343,8 @@ def plotImgAndFitResult(imgs, popts, bgs=[], imgs2=None,
         title[n+1] += axlist[n]
         
     if uniformscale:
-        vmax = imgShow.max()
+        # vmax = imgShow.max()
+        vmax = 2
     else:
         vmax = None
         
@@ -2414,7 +2415,8 @@ def AnalyseFittingResults(poptsList, ax=['Y', 'X'], logTime=None,
                 atomNumber = (amp * width * (2*np.pi)**0.5).sum()
                 if N == 1:
                     center = center[0]
-                    width = width[0]                
+                    width = width[0]               
+                    # amp = amp[0]
     
             results.append([center, width, atomNumber])
         
@@ -3059,7 +3061,7 @@ def PlotResults(df, xVariable, yVariable, filterLists=[],
             if threeD:
                 ax.plot3D( [ii]*len(xMean), xMean, yMean, label=label)                
             else:
-                ax.errorbar(xMean, yMean, yStd, xStd, capsize=3, label=label) 
+                ax.errorbar(xMean, yMean, yStd, xStd, capsize=3, label=label, marker='o') 
                 #plt.scatter(xMean, yMean, s=8)
         else:
             ax.plot( dfii[xVariable], dfii[yVariable], '.', label=label)
@@ -3302,7 +3304,7 @@ def multiVariableThermometry(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
                                       do_plot=1, ax=ax)
         
         if do_plot and add_Text:
-            ax.text(0.03, 0.95, '{}\n= {}'.format(variables, ind), ha='left', va='top', transform=ax.transAxes)
+            ax.text(0.03, 0.95, '{}\n= {}'.format(variables, tuple(round(x,2) for x in ind)), ha='left', va='top', transform=ax.transAxes)
             # ax.text(0, 20, 'T (uK): {:.3f}'.format(popt[1]*1e6), ha='left', va='top')
 
         T.append( popt[1] )
@@ -3420,6 +3422,48 @@ def CircularMask(array, centerx = None, centery = None, radius = None):
     arraycopy[..., ~mask] = 0
     
     return arraycopy, arraycopy.max()
+
+def Plot_2Dscan(df, scanVar1, scanVar2, dependentVar):
+   
+    fig, ax = plt.subplots(figsize=(8,6))
+   
+    for val2, group in df.groupby(scanVar2):
+        # ax.scatter(group[scanVar1], group[dependentVar], marker='o', label=f'{scanVar2}={val2}')
+        ax.plot(group[scanVar1], group[dependentVar], 'o', label=f'{scanVar2}={val2:.2f}')
+
+       
+    ax.set_xlabel(scanVar1)
+    ax.set_ylabel(dependentVar)
+    ax.legend()
+
+def Plot_2Dscan_Errbars(df, scanVar1, scanVar2, dependentVar, depVarScale=1):
+    '''
+    Description
+    -----------
+    Plots with error bars the dependentVar vs scanVar1 for each value of scanVar2 given
+    '''
+    fig,ax = plt.subplots(figsize=(6,5))
+   
+    stats = df.groupby([scanVar1, scanVar2])[dependentVar].agg(['mean','std']).reset_index()
+   
+    for val2, group in stats.groupby(scanVar2):
+        ax.errorbar(group[scanVar1], group['mean']*depVarScale, yerr=group['std'],
+                    marker='o', label=f'{scanVar2}={val2:.2f}', capsize=3)
+   
+    ax.set_xlabel(scanVar1)
+    ax.set_ylabel(dependentVar)
+    # ax.legend(loc='upper right')
+    ax.legend()
+
+
+def FilterDataframe(df, col1, threshold, col2=None):
+    
+    condition = np.abs(df[col1]) <= threshold
+    
+    if col2 is not None:
+        condition = condition & (df[col2] <= threshold)
+    
+    return df[condition]
 
 
 

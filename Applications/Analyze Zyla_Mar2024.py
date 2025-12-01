@@ -17,21 +17,28 @@ plt.close('all')
 ####################################
 #Set the date and the folder name
 ####################################
-dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+dataRootFolder = r'F:\Data'
 
-date = '11/11/2024'
+date = '04/04/2025'
+# date = '11/08/2024'
 data_folder = [
     # r'Andor/ODT temp MF waveplate 220_1',
-    # r'Andor/Test',
-    r'Andor/Test top',
+    # r'Andor/cMOT rf 220-228 MHz fine',
+    # 'RF spectroscopy test'
+    # r'Andor/cMOT rf 228-236 MHz fine',
+    # r'Andor/Evap cloud Chop',
     # r'Andor/lifetime Evap1_V 0.35V',
-# date = '2/13/2025'
+    # r'Andor/MOT temp check',
+    # r'Andor/D1 temp_1'
+    # r'Andor/ODT temp check no evap_1'
+    # r'Andor/D1 thermometry Cooling AOM 80.5 MHz_1'
+    r'Andor/Small coil mot char 1V vert bias'
+    # r'Andor/D1 temp check'
 
-# data_folder = [
-#     r'Andor/HF evap temp 0.3 V',
-#     r'Andor/HF evap temp 0.4 V',
-#     r'Andor/HF evap temp 0.5 V',
-#     ]
+
+    ]
+
 ####################################
 #Parameter Setting'
 ####################################
@@ -40,7 +47,7 @@ saveresults = 0
 overwriteOldResults = 1
 
 repetition = 1 #The number of identical runs to be averaged.
-subtract_burntin = 0
+subtract_burntin = 1
 
 skipFirstImg = 'auto'
 # skipFirstImg = 0
@@ -65,8 +72,8 @@ variableFilterList = [
 pictureToHide = None
 # pictureToHide = [0,1,2,3] # list(range(0,10,2))
 
-subtract_bg = 1
-signal_feature = 'wide' 
+subtract_bg = 0
+signal_feature = 'narrow' 
 signal_width = 10 #The narrower the signal, the bigger the number.
 fitbgDeg = 5
 
@@ -75,10 +82,10 @@ rowend = -10
 columnstart = 10
 columnend = -10
 
-rowstart = 300
-rowend = 430
-columnstart = 650
-columnend= 1000
+# rowstart = 200
+# rowend = 700
+# columnstart = 500
+# columnend= 1200
 
 # ODT 3300
 # rowstart = 10
@@ -112,7 +119,7 @@ columnend= 1000
 
 ####################################
 ####################################
-dayfolder = ImageAnalysisCode.GetDataLocation(date, DataPath=dataRootFolder)
+dayfolder = ImageAnalysisCode.GetDayFolder(date, root=dataRootFolder)
 dataPath = [ os.path.join(dayfolder, f) for f in data_folder]
 
 # variableLog_folder = dayFolder + r'/Variable Logs'
@@ -145,7 +152,7 @@ opticalDensity, variableLog = ImageAnalysisCode.PreprocessZylaImg(*dataPath, exa
                                                                    #! Keep rebuildCatalogue = 0 unless necessary!
                                                                    rebuildCatalogue=0,
                                                                    ##################
-                                                                    filterLists=[['TOF<1']]
+                                                                    # filterLists=[['TOF<1.3']]
                                                                     )
 
 autoCrop = 0
@@ -170,22 +177,22 @@ if saveresults:
 
 
 # %%
-# ImageAnalysisCode.PlotFromDataCSV(results, 'HF_AOM_Freq', 'Ywidth', 
-#                                    iterateVariable='Lens_Position', 
-#                                    # filterLists=[['Ywidth<10']],
-#                                   groupbyX=1, threeD=0,
-#                                   figSize = 0.5
-#                                   )
-
-ImageAnalysisCode.PlotResults(results, 'fmod_kHz', 'Ywidth', 
-
-                                  # iterateVariable='VerticalBiasCurrent', 
-                                  # filterByAnd=['VerticalBiasCurrent>7.6', 'VerticalBiasCurrent<8'],
-                                  # groupby='ODT_Position', 
-                                    groupbyX=1, 
-                                  threeD=0,
+ImageAnalysisCode.PlotFromDataCSV(results, 'TOF', 'Ywidth', 
+                                   # iterateVariable='Lens_Position', 
+                                   # filterLists=[['Ywidth<10']],
+                                  groupbyX=1, threeD=0,
                                   figSize = 0.5
                                   )
+
+# ImageAnalysisCode.PlotResults(results, 'RF_FRQ_MHz', 'YatomNumber', 
+
+#                                   # iterateVariable='VerticalBiasCurrent', 
+#                                   # filterByAnd=['VerticalBiasCurrent>7.6', 'VerticalBiasCurrent<8'],
+#                                   # groupby='ODT_Position', 
+#                                     groupbyX=1, 
+#                                   threeD=0,
+#                                   figSize = 0.5
+#                                   )
 
 
 # fig, ax = plt.subplots(figsize=(5,4), layout='constrained') 
@@ -194,7 +201,7 @@ ImageAnalysisCode.PlotResults(results, 'fmod_kHz', 'Ywidth',
 # %%
 
 intermediatePlot = 1
-plotPWindow = 4
+plotPWindow = 5
 plotRate = 1
 uniformscale = 0
 rcParams = {'font.size': 10, 'xtick.labelsize': 9, 'ytick.labelsize': 9,
@@ -206,19 +213,20 @@ variablesToDisplay = [
                         'TOF',
                         # 'ODT_Misalign',
                         # 'Evap1_V',
-                        'LowServo1',
+                        # 'LowServo1',
                         # 'Evap_time_2'
                         # 'Evap_timestep',
                         'wait',
                         # 'VerticalBiasCurrent',
-                        # 'ZSBiasCurrent',
+                        'ZSBiasCurrent',
                         # 'FieldRamp_ms',
                         # 'HoldTime_ms',
-                        'ODT_Position',
+                        # 'ODT_Position',
                         # 'fmod_kHz',
                         # 'tmod_ms',
                         # 'Cycles_num',
                         # 'Mod_amp',
+                        # 'RF_FRQ_MHz'
                       ]
 showTimestamp = False
 # variablesToDisplay=None
@@ -340,21 +348,23 @@ if intermediatePlot:
 # %% THERMOMETRY
 
 # filterLists = [['LowServo1>0.6'], ['LowServo1==0.6','TOF<1.5'], ['LowServo1==0.5', 'TOF<0.9']]
-filterLists = []
-fltedData = ImageAnalysisCode.DataFilter(results, filterLists=filterLists)
+# filterLists = []
+# fltedData = ImageAnalysisCode.DataFilter(results, filterLists=filterLists)
 
 
 
 # var2 = 'wait'
 # var2 = 'Evap_timestep'
-var2 = 'LowServo1'
+var2 = 'VerticalBiasVoltage'
 # var2 = 'Evap_Time_2'
 df = ImageAnalysisCode.multiVariableThermometry(    
-                                                # results, 
-                                                fltedData,
+                                                results, 
+                                                # fltedData,
                                                 # var1, 
                                                 var2, 
                                                 fitXVar='TOF',  fitYVar='Ywidth',do_plot=1, add_Text=1)
+results['zyla']['T (K)'] = df
+
 
 
 #%% ASPECT RATIO CALCULATION
