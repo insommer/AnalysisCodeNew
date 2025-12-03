@@ -1,4 +1,3 @@
-import DMDanalysis
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -6,30 +5,30 @@ import pandas as pd
 import re
 from scipy.optimize import curve_fit
 from ImageAnalysis import ImageAnalysisCode
+import datetime
 import configparser
+from PIL import Image
+import cv2
 
 
 plt.close('all')
 
-DA = DMDanalysis.DMDanalysis()
-
-dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-date = '11/13/2025'
+# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
+date = '12/1/2025'
 
 camera = 'Basler'
 powr = 15
 # camera = 'Andor'
 data_folder = [
 
-    fr'{camera}/Other lens 307 mm power {powr}',
-    fr'{camera}/Other lens 301 mm power {powr}',
-    fr'{camera}/Other lens 297 mm power {powr}',
-    fr'{camera}/Other lens 290 mm power {powr}',
-
-
-
-
-
+    fr'{camera}/SPX023AR.1 110 mm power {powr}',
+    fr'{camera}/SPX023AR.1 113 mm power {powr}',
+    fr'{camera}/SPX023AR.1 117 mm power {powr}',
+    fr'{camera}/SPX023AR.1 121 mm power {powr}',
+    fr'{camera}/SPX023AR.1 124 mm power {powr}',
+    fr'{camera}/SPX023AR.1 128 mm power {powr}',
+    fr'{camera}/SPX023AR.1 132 mm power {powr}',
 
     ]
 
@@ -37,7 +36,6 @@ repetition = 6
 commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
-
 
 doPlot = 0
 angle = 0
@@ -48,8 +46,7 @@ columnstart=1
 columnend=-1
 ROI = [rowstart, rowend, columnstart, columnend]
 
-
-dayFolder = DA.GetDataLocation(date, dataRootFolder)
+dayFolder = ImageAnalysisCode.GetDataLocation(date, dataRootFolder)
 dataPath = [ os.path.join(dayFolder, j) for j in data_folder]
 
 if camera == 'Basler':
@@ -58,88 +55,9 @@ elif camera == 'FLIR':
     pixSize = 3.75 #um/px
 elif camera == 'Andor':
     pixSize = 6.5 #um/pix
-
-#%%
-
-def GetFullFilePaths(dataPath_list):
-
-    fullpath = []
-    
-    for folder in dataPath:
-        folder = folder+'/'
-        
-        for filename in os.listdir(folder):
-            
-            path = folder+filename
-            fullpath.append(path)
-    
-    return fullpath
-
-def ExtractMetaData(filePaths):
-
-    metaFile = next( (f for f in filePaths if f.lower().endswith('.ini')), None)
-    
-    if metaFile is None:
-        raise FileNotFoundError('No metadata file found')
-        return None
-        
-    
-    config = configparser.ConfigParser()
-    config.optionxform = str
-    config.read(metaFile, encoding='utf-8-sig')
-    
-    
-    height = int(config['data']['AOIHeight'])
-    width = int(config['data']['AOIWidth'])
-    pixFormat = config['data']['PixelEncoding']
-    if pixFormat.lower() == 'mono16':
-        dataType = np.uint16
-    
-    pixNumber = height*width
-    
-    return height, width, pixNumber, pixFormat, dataType
-
-def GetImages(dataPath_list, camera, ROI, metadata=None):
-    
-    imgs = []
-    
-    if camera == 'Andor':
-        # for Andor files, remove first 40 bytes
-        headerbytes = 40
-        height = metadata[0]
-        width = metadata[1]
-        
-        binFile = [f for f in dataPath_list if f.lower().endswith('.dat')]
-        
-        for path in binFile:
-            with open(path, 'rb') as f:
-                f.seek(headerbytes)
-                img_data = np.frombuffer(f.read(), dtype=np.uint16)
-            
-            expectedsize = height*width
-            if img_data.size != expectedsize:
-                raise ValueError(f'has {img_data.size} pixels, but expected {expectedsize}')
-    
-            imgArr = img_data.reshape((height,width))
-            imgArr = imgArr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
-            
-            imgs.append(imgArr)
-            
-    else:
-        for file in dataPath_list:
-            imgArr = DA.CheckFile(file)
-            imgArr = imgArr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
-
-            imgs.append(imgArr)
-
-    return imgs
-
 #%%
 
 df = pd.DataFrame(columns=['File', 'Condition', 'Value', 'Xcenter', 'Ycenter', 'Xwidth', 'Ywidth', 'Xamp', 'Yamp'])
-Xcenters = []; Ycenters = []
-Xwidths = []; Ywidths = []
-Xamps = []; Yamps = []
 
 if commonPhrase:
 
@@ -179,22 +97,22 @@ if commonPhrase:
     
 #%%
 
-fullpath = GetFullFilePaths(dataPath)
+fullpath = ImageAnalysisCode.GetFullFilePaths(dataPath)
 
 if camera == 'Andor':
-    metaData = ExtractMetaData(fullpath)
+    metaData = ImageAnalysisCode.ExtractMetaData(fullpath)
 else:
     metaData = None
     
-images = GetImages(fullpath, camera, ROI, metaData)
+images = ImageAnalysisCode.GetImages(fullpath, camera, ROI, metaData)
 
-
+# empty lists to store fitted parameters
+Xcenters = []; Ycenters = []; Xwidths = []; Ywidths = []; Xamps = []; Yamps = []
 
 for image_arr in images:
     
-    image_arr, _ = DA.Rotate(image_arr, angle)
-        
-    paramX, paramY = DA.FitGaussian(image_arr, doPlot, 'wide')
+    image_arr, _ = ImageAnalysisCode.Rotate(image_arr, angle)
+    paramX, paramY = ImageAnalysisCode.FitGaussian(image_arr, doPlot, 'wide')
     
     Xcenter = paramX[0]*pixSize
     Xwidth = paramX[1]*pixSize
@@ -225,7 +143,6 @@ else:
 
 #%%
 
-
 for col in colsForAnalysis:
     
     plt.figure(figsize=(4,3))
@@ -239,37 +156,8 @@ for col in colsForAnalysis:
     # plt.legend(title='Power %')
     plt.tight_layout()
     
-#%%
 
-def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
-
-    def w_z(z, w0, z0, zR):
-        return w0 * np.sqrt(1 + ((z - z0) / zR)**2)
-    
-    # assumes distances in mm, waist in um
-    for col in colsForAnalysis:
-        z = stats['Distance'].values
-        w_meas = stats[col+'_mean'].values
-        w_err = stats[col+'_std'].values
-        
-        p0 = [min(w_meas), z[np.argmin(w_meas)], (max(z) - min(z)) / 2]
-        
-        popt, pcov = curve_fit(w_z, z, w_meas, p0=p0, sigma=w_err, absolute_sigma=True)
-        
-        w0_fit, z0_fit, zR_fit = popt
-        perr = np.sqrt(np.diag(pcov))
-        
-        if doPlot:
-            z_fit = np.linspace(min(z), max(z), 300)
-            fig, ax = plt.subplots(figsize=(4,3))
-            ax.errorbar(z, w_meas, yerr=w_err, fmt='o', capsize=3)
-            ax.plot(z_fit, w_z(z_fit, *popt), 'r-')
-            ax.set_xlabel('Distance (mm)')
-            ax.set_ylabel(col+' (μm)')
-            ax.text(0.3, 0.85, f'w0={w0_fit:.2f} μm\nz0={z0_fit:.2f} mm', transform=ax.transAxes, bbox=dict(facecolor='white'))
-            plt.tight_layout()
-            
-FitGaussianWaist(stats, colsForAnalysis)
+ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
 
 
 

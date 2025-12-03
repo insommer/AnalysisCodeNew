@@ -2295,7 +2295,8 @@ def plotImgAndFitResult(imgs, popts, bgs=[], imgs2=None,
                         rcParams={'font.size': 10, 'xtick.labelsize': 9, 'ytick.labelsize': 9}): 
     
     rcParams0 = plt.rcParams # Store the original plt params
-    plt.rcParams.update(rcParams | {'image.cmap': 'jet'})
+    plt.rcParams.update({'image.cmap': 'jet'})
+
     
     axDict = {'x': 0, 'y':1}
 
@@ -3466,348 +3467,223 @@ def FilterDataframe(df, col1, threshold, col2=None):
     return df[condition]
 
 
-
+def saveResultsDF(results, dayfolder):
     
+    parentPath = os.path.join(dayfolder, 'Andor')
+    
+    for folder_name, subDF in results['zyla'].groupby('Folder'):
+        pkl_path = os.path.join(parentPath, folder_name, 'results.pkl')
+        subDF.to_pickle(pkl_path)
 
-# '''
+#%% Maximilliano
+from PIL import Image
+import cv2
 
-# #Gaussian_fit takes an array of the summed atom numbers. It outputs a gaussian width, a full fit report, and an x axis array
-# def Gaussian_fit(images, params, slice_array, tof, units_of_tof, dataFolder='.'):
-#     xposition = params.andor_pixel_size*np.linspace(0, len(slice_array),len(slice_array))
-#     aguess = np.max(slice_array)
-#     muguess = params.andor_pixel_size*np.where(slice_array == np.max(slice_array))[0][0]
-#     w0guess = params.andor_pixel_size*len(slice_array)/4 #the standard dev. of the Gaussian
-#     cguess = np.min(slice_array)
-#     paramstemp = Parameters()
-#     paramstemp.add_many(
-#         ('a', aguess,True, None, None, None),
-#         ('mu', muguess, True, None, None, None),
-#         ('w0', w0guess, True, None, None, None),
-#         ('c', cguess, True, None, None, None),
-#         )
+def CheckFile(file):
+    if isinstance(file, str) and file.endswith('.png'):  
+        arr = np.array(Image.open(file).convert('L'))
         
-#     model = lmfit.Model(Gaussian)
-#     result = model.fit(slice_array, x=xposition, params = paramstemp)
-#     gwidth = abs(result.params['w0'].value)
-#     return  gwidth, result, xposition
+    elif isinstance(file, np.ndarray):
+        arr = file
+        
+    elif isinstance(file, str) and file.endswith('.raw'):
+        temp = np.fromfile(file, dtype = np.uint8)
+        arr = np.reshape(temp, (2160,3840)) # Basler dart resolution
+        
+    elif isinstance(file, str) and file.endswith('.pgm'):
+        img = Image.open(file)
+        arr = np.asarray(img, dtype=np.uint16)
+        rows, cols = np.shape(arr)
+        rows2discard = 2
+        arr = arr[rows2discard:, :]    
+    else:
+        raise ValueError(f"Unsupported file type or input: {file}")
+    
+    return arr
 
 
-# #Here I call the Gaussian_fit function on all of the expanding cloud pictures to output widths for all of them.
-#     half_of_pictures = int(params.number_of_pics/2)
-#     gaussian_widths_x = np.zeros(half_of_pictures)
-#     gaussian_widths_y = np.zeros(half_of_pictures)
-#     num_atoms_vs_x, num_atoms_vs_y, atoms_max = temp(slice_array)
- 
-#     for i in range(half_of_pictures):
-#         fittemp_x = Gaussian_fit(num_atoms_vs_x[2*i+1,:])
-#         fittemp_y = Gaussian_fit(num_atoms_vs_y[2*i+1,:])
-#         gaussian_widths_x[i] = fittemp_x[0]
-#         gaussian_widths_y[i] = fittemp_y[0]
+
+def GetImages(dataPath_list, camera, ROI, metadata=None):
+    
+    imgs = []
+    
+    if camera == 'Andor':
+        # for Andor files, remove first 40 bytes
+        headerbytes = 40
+        height = metadata[0]
+        width = metadata[1]
         
+        binFile = [f for f in dataPath_list if f.lower().endswith('.dat')]
         
-#         if params.ready_to_save == 'true':
-        
-#             #save Gaussian fit in x direction plot
-#             fit0_x = Gaussian_fit(num_atoms_vs_x[2*i+1,:])
-#             plt.figure()
-#             plt.rcParams.update({'font.size':9})
-#             plt.title('TOF = {}'.format(tof[i])+units_of_tof+' horizontal plot, standard dev. = {}m'.format(round(abs(fit0_x[0]), 5)))
-#             plt.xlabel("Position (m)")
-#             plt.ylabel("Number of atoms in MOT")
-#             plt.plot(fit0_x[2], num_atoms_vs_x[2*i+1,:], 'g.', label='Signal')
-#             plt.plot(fit0_x[2], fit0_x[1].best_fit, 'b', label='Fit')
-#             plt.legend()
-#             plt.tight_layout()
-#             plt.savefig(dataFolder +r'\TOF = {}'.format(tof[i])+units_of_tof+' horizontal plot.png', dpi = 300)
-#             plt.close()  
+        for path in binFile:
+            with open(path, 'rb') as f:
+                f.seek(headerbytes)
+                img_data = np.frombuffer(f.read(), dtype=np.uint16)
             
-#             #save Gaussian fit in y direction plot
-#             fit0_y = Gaussian_fit(num_atoms_vs_y[2*i+1,:])
-#             plt.figure()
-#             plt.title('TOF = {}'.format(tof[i])+units_of_tof+' vertical plot, standard dev. = {}m'.format(round(abs(fit0_y[0]), 5)))
-#             plt.xlabel("Position (m)")
-#             plt.ylabel("Number of atoms in MOT")
-#             plt.plot(fit0_y[2], num_atoms_vs_y[2*i+1,:], 'g.', label='Signal')
-#             plt.plot(fit0_y[2], fit0_y[1].best_fit, 'b', label='Fit')
-#             plt.legend()
-#             plt.tight_layout()
-#             plt.savefig(dataFolder+r'\TOF = {}'.format(tof[i])+units_of_tof+' vertical plot.png', dpi = 300)
-#             plt.close()
-           
-#             #save the picture from Andor
-#             plt.figure()
-#             plt.title("Signal inside red rectangle")
-#             plt.imshow(images[2*i+1,params.ymin:params.ymax,params.xmin:params.xmax],cmap="gray", origin="lower",interpolation="nearest",vmin=np.min(images),vmax=np.max(images))
-#             plt.savefig(dataFolder+r'\TOF = {}'.format(tof[i])+units_of_tof+' signal inside red rectangle.png', dpi = 300)
-#             plt.close()
+            expectedsize = height*width
+            if img_data.size != expectedsize:
+                raise ValueError(f'has {img_data.size} pixels, but expected {expectedsize}')
+    
+            imgArr = img_data.reshape((height,width))
+            imgArr = imgArr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
             
+            imgs.append(imgArr)
+            
+    else:
+        for file in dataPath_list:
+            imgArr = CheckFile(file)
+            imgArr = imgArr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
 
-#     gaussian_widths_x = np.flip(gaussian_widths_x)
-#     gaussian_widths_y = np.flip(gaussian_widths_y)
+            imgs.append(imgArr)
 
-
-# #Here we import the relevant TOF file and combine it with the gaussian widths
-#     widths_tof_x = np.zeros((len(gaussian_widths_x),2))
-#     widths_tof_y = np.zeros((len(gaussian_widths_y),2))
-
-#     for i in range(len(gaussian_widths_x)):
-#          widths_tof_x[i] = (gaussian_widths_x[i], tof[i])
-#          widths_tof_y[i] = (gaussian_widths_y[i], tof[i])
-
-# # save the data in a csv file
-#     if params.ready_to_save =='true':
-#         csvfilename_x = dataFolder+r"\widths_vs_tof_x.csv"
-#         csvfilename_y = dataFolder+r"\widths_vs_tof_y.csv"
-#         np.savetxt(csvfilename_x, widths_tof_x, delimiter = ",") 
-#         np.savetxt(csvfilename_y, widths_tof_y, delimiter = ",") 
-
-
-# def find_nearest(array, value):
-#     array = np.asarray(array)
-#     idx = (np.abs(array - value)).argmin()
-#     return array[idx]
-
-# def exponential(x, m, t, b):
-#     return m * np.exp(-t * x) + b
-    
-# '''
+    return imgs
 
 
 
+def GetFullFilePaths(dataPath_list):
 
-
-
-
-# def fit_decay():
-    
-    #fit parameters
-    # value = atom_max*np.exp(-1)
-    # emin1 = find_nearest(array, value)
-    # finder = np.where(N_atoms == emin1)
-#     array_number = int(finder[0])
-#     #print("array_number: ", array_number)
-#     #######################################This is the time for the function to reach e**-1 of max value
-#     emin1_time = Picture_Time[array_number]
-#     atom_fraction = N_atoms/max(N_atoms)
-    
-    
-    
-#     p0 = (count_spooled.atom_max, 1/emin1_time, 0) # start with values near those we expect
-#     params, cv = scipy.optimize.curve_fit(exp, Picture_Time, N_atoms, p0)
-#     m, t, b = params
-    
-#     #Quality of fit
-#     squaredDiffs = np.square(N_atoms - exp(Picture_Time, m, t, b))
-#     squaredDiffsFromMean = np.square(N_atoms - np.mean(N_atoms))
-#     rSquared = 1 - np.sum(squaredDiffs) / np.sum(squaredDiffsFromMean)
-#     print(f"R² = {rSquared}")
-#     print(f"Y = {m} * e^(-{t} * x) + {b}")
+    fullpath = []
+    for folder in dataPath_list:
+        folder = folder+'/'
         
-#     # plot the results
-#     plt.plot(Picture_Time, N_atoms, '.', label="data")
-#     plt.plot(Picture_Time, exp(Picture_Time, m, t, b), '--', label="fitted")
-#     plt.title("Fitted Exponential Curve", fontsize = 18)
-#     if m < 10**5:
-#         pressure = t/(6.4*10**7)
-#         print("It appears that this decay occurs in the low density limit.")
-#         print("Based off of this assumption, the background pressure of the vacuum chamber appears to be {pressure} torr.")
+        for filename in os.listdir(folder):
+            
+            path = folder+filename
+            fullpath.append(path)
     
-    
-# def fit_load():
-#     p0 = (atom_max, (1-math.log(math.e-1))/emin1_time, atom_max) # start with values near those we expect
-#     params, cv = scipy.optimize.curve_fit(exp, Picture_Time, N_atoms, p0)
-#     m, t, b = params
-    
-#     #Quality of fit
-#     squaredDiffs = np.square(N_atoms - exponential(Picture_Time, m, t, b))
-#     squaredDiffsFromMean = np.square(N_atoms - np.mean(N_atoms))
-#     rSquared = 1 - np.sum(squaredDiffs) / np.sum(squaredDiffsFromMean)
-#     print(f"R² = {rSquared}")
-#     print(f"Y = {m} * e^(-{t} * x) + {b}")
-#     # plot the results
-#     plt.plot(Picture_Time, N_atoms-min(N_atoms), '.', label="data")
-#     plt.plot(Picture_Time, Load_Decay(Picture_Time, m, t, b)-min(N_atoms), '--', label="fitted")
-#     plt.title("Atoms Loaded Over Time", fontsize = 20)    
+    return fullpath
 
-def imageFreqOptimization(imgfreqs, atomNumbers,ratio_array):
-    plt.figure(figsize=(5,4))
-    plt.plot(imgfreqs,atomNumbers,'o')
-    plt.xlabel("Freq (MHz)")
-    plt.ylabel("Apparent atom number")
-    plt.tight_layout()
-    plt.show()
-    
-    imax = np.max(ratio_array)
-    imin = np.min(ratio_array)
-    number_of_iterations = np.shape(atomNumbers)[0]
-    fig, axes = plt.subplots(1,number_of_iterations, sharex='all', sharey='all')
-    for it in range(number_of_iterations):
-        # ax = plt.subplots(1,params.number_of_iterations,it+1, sharex='all', sharey='all')
-        axes[it].imshow(ratio_array[it,:,:],cmap="gray", vmin=imin, vmax=imax)
-        # ax.set_size_inches(18.5, 10.5)
-    #plt.tight_layout()
-    plt.subplots_adjust(wspace=None, hspace=None)
-    plt.tight_layout()
-    plt.show()
 
-#if __name__ == "__main__":
-    #TESTING Script:
-    # data_folder =  'odt test tof 4ms'   
-    # rowstart = 0#450
-    # rowend = -1#560
-    # columnstart = 0#600
-    # columnend =-1 #900
-    # config = LoadConfigFile(data_folder)
-    # params = ExperimentParams(config, picturesPerIteration=3)        
-    # abs_img_data = LoadSpooledSeries(params, data_folder=data_folder, background_file_name="")
-    # Number_of_atoms, N_abs, ratio_array, n2d = absImagingSimple(abs_img_data, firstFrame=0, correctionFactorInput=1, rowstart = rowstart, rowend=rowend,columnstart=columnstart,columnend=columnend)
-    # print(np.shape(ratio_array[0]))
-    
-    # # imageFreqOptimization(np.loadtxt(data_folder+"/imgfreq.txt"), Number_of_atoms, ratio_array, params)
-    # plt.imshow(ratio_array[0][rowstart:rowend,columnstart:columnend],vmin=0,vmax=1.2,cmap="gray")
-    # densityvsrow = np.sum(n2d[0][rowstart:rowend,columnstart:columnend], 1)
-    # print("densityvsrow = "+str(np.shape(densityvsrow)))
-    # plt.figure()
-    # plt.plot(densityvsrow)
-    # #plt.imshow(n2d[0],vmin=0,cmap="gray")
-    # plt.show()
-    
-    
-    
-    
-    
-    # for r in range(rows):
-    #     for c in range(cols):
-    #         if not np.isfinite(ratio[r][c]):
-    #             print("FOUND NAN/inf")
-    #             ratio[r][c]= 1
-    #             print(ratio[r][c])
-    #plt.imshow(ratio_array[7],vmin=0,vmax=1.5,cmap="gray")
-    #plt.show()
-    # CountsToAtoms(params, images[3,4,:,:])
+def ExtractMetaData(filePaths):
 
-    # images = loadSeriesPGM(params, root_filename="cMOTtest", number_of_pics=1, picturesPerIteration=1, n_params=0, data_folder= ".", background_file_name="")       
-    # ShowImagesTranspose(images)    
-
-    #raw_img = loadRAW("test3.raw")
+    metaFile = next( (f for f in filePaths if f.lower().endswith('.ini')), None)
     
-    # print("Number of iterations=",params.number_of_iterations)
-    
-    # N_array = np.zeros(6) 
-    # for x in range(6):
-    #     abs_img_data = LoadSpooledSeries(params, data_folder=str(x+1), background_file_name="")
-    #     Number_of_atoms, N_abs = absImagingSimple(abs_img_data)
-    #     N_array[x] = N_abs
-    # print(N_array)
-    # N_list = N_array.tolist()
-    # print(type(N_list))
-    # freqs = [230, 231, 232, 233.5, 236.5, 235.8]
-    # plt.figure
-    # plt.plot(freqs, N_list)
-    # plt.show()
-        # abs_img_test = LoadSpooledSeries(params, data_folder=str(x+1), background_file_name="")
-        # print(np.shape(abs_img_test))
-        # #ShowImagesTranspose(abs_img_test, False)
-        # subtracted1 = abs_img_test[0,0,:,:] - abs_img_test[0,2,:,:]
-        # subtracted2 = abs_img_test[0,1,:,:] - abs_img_test[0,2,:,:]
-        # ratio = subtracted1 / subtracted2
+    if metaFile is None:
+        raise FileNotFoundError('No metadata file found')
+        return None
         
-        # correctionFactor = np.mean(ratio[-5:][:])
-        # print("correction factor=",correctionFactor)
-        # ratio /= correctionFactor
-        # OD = -1 * np.log(ratio)
-        # N_abs = np.sum(OD) 
-        # N_array[x] = N_abs
-        # magnification = 0.6 #75/125 (ideally)
-        # detuning = 2*np.pi*0 #how far from max absorption @231MHz. if the imaging beam is 230mhz then delta is -1MHz. unit is Hz
-        # gamma = 36.898e6 #units Hz
-        # wavevector =2*np.pi/(671e-9) #units 1/m
-        # sigma = (6*np.pi / (wavevector**2)) * (1+(2*detuning/gamma)**2)**-1 
-        # n2d = OD /sigma 
-        # deltaX = 6.5e-6/magnification #pixel size in atom plane
-        # deltaY = deltaX
-        # N_atoms = np.sum(n2d) * deltaX * deltaY
-        # print("number of atoms: ", N_atoms/1e6,"x10^6")        
     
+    config = configparser.ConfigParser()
+    config.optionxform = str
+    config.read(metaFile, encoding='utf-8-sig')
+    
+    
+    height = int(config['data']['AOIHeight'])
+    width = int(config['data']['AOIWidth'])
+    pixFormat = config['data']['PixelEncoding']
+    if pixFormat.lower() == 'mono16':
+        dataType = np.uint16
+    
+    pixNumber = height*width
+    
+    return height, width, pixNumber, pixFormat, dataType
 
-    # plt.figure()
-    # plt.imshow(OD)
-    # plt.show()
-    
-    
-    # count_x = np.sum(ratio,axis = 0) #sum over y direction/columns 
-    # count_y = np.sum(subtracted1,axis = 1)
-    
-    # plt.figure()
-    # plt.plot(OD[100,:])
-    # plt.show()
-    
-    # plt.figure()
-    # plt.imshow(ratio,cmap="gray")
-    # plt.show()
-    
-    
-    # #atomsPerPixel = CountsToAtoms(params, counts)
-    
-    # #ShowImagesTranspose(atomsPerPixel)
-    
-    # print(np.shape(images1))
-    # print(np.shape(signal1))
-    
 
+def Rotate(image_arr, deg):
+    height, width = image_arr.shape[:2]
     
+    center = (width / 2, height / 2)
     
-    #atomNumbers = ImageTotals(atomsPerPixel)
+    rotationMatrix = cv2.getRotationMatrix2D(center, deg, 1.0)
+    rotated = cv2.warpAffine(image_arr, rotationMatrix, (width, height))
     
-    #print(atomNumbers)
-    
-    #number_of_pics = int(config['Acquisition']['NumberinKineticSeries'])
-    #print(number_of_pics)
-    
-    # images = LoadSpooledSeries(config, data_folder= "." , background_file_name= "spool_background.dat", picturesPerIteration=3)
-    # #images = LoadNonSpooledSeries(...)
-    
-    # atoms_per_pixel_images = GetCountsFromRawData(images,config)
-    
-    # #analyse it somehow:
-    # #Find the total number of atoms at the end of each iteration
-    # atom_numbers = GetTotalNumberofAtoms(atoms_per_pixel_images)
-    
-    # print("Number of atoms in 2nd picture of iteration 0:",atom_numbers[0][1])
-    
-    # #Do a fit:
-    # result = DoExponentialFit(atom_numbers[:][1])
-    
-    # print(np.shape(images))
-    
-    
-    
-    
+    return rotated, rotationMatrix
 
-#     #here I am making a plot of the first gaussian with the fit for reference
-#     fit0_x = Gaussian_fit(num_atoms_vs_x[PreviewIndex,:])
-#     plt.figure()
-#     plt.rcParams.update({'font.size':9})
-#     plt.title('Atoms TOF horizontal example plot, standard dev. = {}m'.format(round(fit0_x[0], 5)))
-#     plt.xlabel("Position (m)")
-#     plt.ylabel("Number of atoms in MOT")
-#     plt.plot(fit0_x[2], num_atoms_vs_x[PreviewIndex,:], 'g.', label='Signal')
-#     plt.plot(fit0_x[2], fit0_x[1].best_fit, 'b', label='Fit')
-#     # plt.xlim(fit0_x[2][0], fit0_x[2][-1])
-#     plt.legend()
-#     plt.tight_layout()
-#     # plt.savefig(folder_name+r"\Horizontal Gaussian Example.png", dpi = 300)
 
-#     fit0_y = Gaussian_fit(num_atoms_vs_y[PreviewIndex,:])
-#     plt.figure()
-#     plt.title('Atoms TOF vertical example plot, standard dev. = {}m'.format(round(fit0_y[0], 5)))
-#     plt.xlabel("Position (m)")
-#     plt.ylabel("Number of atoms in MOT")
-#     plt.plot(fit0_y[2], num_atoms_vs_y[PreviewIndex,:], 'g.', label='Signal')
-#     plt.plot(fit0_y[2], fit0_y[1].best_fit, 'b', label='Fit')
-#     # plt.xlim(fit0_y[2][0], fit0_y[2][-1])
-#     plt.legend()
-#     plt.tight_layout()
-#     plt.show()
-#     # plt.savefig(folder_name+r"\Vertical Gaussian Example.png", dpi = 300)
+def Gauss1D(x,xc,sigX,A, offset):
+    G = A * np.exp(-2 * (x-xc)**2 / sigX**2) + offset
+    return G
+
+
+def FitGaussian(gaussImageFile, graph=True, graphOption='Wide'):
     
+    beam = CheckFile(gaussImageFile)
+    Ny, Nx = beam.shape
+    x_index = np.linspace(0, Nx-1, Nx)
+    y_index = np.linspace(0, Ny-1, Ny)
+    
+    max_index = np.unravel_index(np.argmax(beam), beam.shape)
+    max_x, max_y = max_index
+
+    vert = beam[:, max_y]
+    horiz = beam[max_x, :]
+    
+    sigGuess = 40
+    offset = 0
+    
+    guessX = [max_y, sigGuess, np.max(horiz), offset]
+    paramX,_ = curve_fit(Gauss1D, x_index, horiz, p0=guessX)
+    x_fit1 = np.linspace(0, Nx-1, 5000)
+    y_fit1 = Gauss1D(x_fit1, paramX[0], paramX[1], paramX[2], paramX[3])
+
+    guessY = [max_x, sigGuess, np.max(vert), offset]
+    paramY,_ = curve_fit(Gauss1D, y_index, vert, p0=guessY)
+    x_fit2 = np.linspace(0,Ny-1, 5000)
+    y_fit2 = Gauss1D(x_fit2, paramY[0], paramY[1], paramY[2], paramY[3])
+    
+    centerX = int(paramX[0])
+    centerY = int(paramY[0])
+            
+    if graph:
+        fig, ax = plt.subplots(1,3)
+        
+        ax[1].plot(x_fit1, y_fit1,'r',linewidth=3)
+        ax[1].scatter(x_index, horiz, s=20)
+        ax[1].set_title('Fit vs. X')
+        
+        text_x = f"x0 = {int(paramX[0])} \nσ = {paramX[1]:.2f} px \nA = {paramX[2]:.2f}"
+        ax[1].text(0.35, 0.95, text_x, transform=ax[1].transAxes, fontsize=10,
+                    verticalalignment='top', bbox=dict(facecolor='white', alpha=0.8))
+        
+        ax[2].plot(x_fit2,y_fit2,'r',linewidth=3)
+        ax[2].scatter(y_index, vert, s=20)
+        ax[2].set_title('Fit vs. Y')
+        
+        text_y = f"y0 = {int(paramY[0])} \nσ = {paramY[1]:.2f} px \nA = {paramY[2]:.2f}"
+        ax[2].text(0.05, 0.95, text_y, transform=ax[2].transAxes, fontsize=10,
+                    verticalalignment='top', bbox=dict(facecolor='white', alpha=0.8))
+        
+        if graphOption == 'Narrow':
+            
+            ax[1].set_xlim(paramX[0]-4*paramX[1], paramX[0]+4*paramX[1])
+            ax[2].set_xlim(paramY[0]-4*paramY[1], paramY[0]+4*paramY[1])
+            
+            ax[0].imshow(beam, extent=[paramX[0]-1, 
+                                       paramX[0]+1, 
+                                       paramY[0]-1, 
+                                       paramY[0]+1])
+        else:
+            ax[0].imshow(beam*-1,cmap='binary')
+            ax[0].imshow(beam,cmap='jet')
+        
+        ax[0].set_title('Image')        
+    return paramX, paramY
+
+
+def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
+
+    def w_z(z, w0, z0, zR):
+        return w0 * np.sqrt(1 + ((z - z0) / zR)**2)
+    
+    # assumes distances in mm, waist in um
+    for col in colsForAnalysis:
+        z = stats['Distance'].values
+        w_meas = stats[col+'_mean'].values
+        w_err = stats[col+'_std'].values
+        
+        p0 = [min(w_meas), z[np.argmin(w_meas)], (max(z) - min(z)) / 2]
+        
+        popt, pcov = curve_fit(w_z, z, w_meas, p0=p0, sigma=w_err, absolute_sigma=True)
+        
+        w0_fit, z0_fit, zR_fit = popt
+        perr = np.sqrt(np.diag(pcov))
+        
+        if doPlot:
+            z_fit = np.linspace(min(z), max(z), 300)
+            fig, ax = plt.subplots(figsize=(4,3))
+            ax.errorbar(z, w_meas, yerr=w_err, fmt='o', capsize=3)
+            ax.plot(z_fit, w_z(z_fit, *popt), 'r-')
+            ax.set_xlabel('Distance (mm)')
+            ax.set_ylabel(col+' (μm)')
+            ax.text(0.3, 0.85, f'w0={w0_fit:.2f} μm\nz0={z0_fit:.2f} mm', transform=ax.transAxes, bbox=dict(facecolor='white'))
+            plt.tight_layout()
