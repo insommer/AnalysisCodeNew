@@ -21,7 +21,8 @@ data_folder = [
     # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_ScanCam0_0.15A_1'
     # 'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
     # 'D1_RFscan_noRamp_ScanVert0.83_1.23A_ZS0.38A_Cam0.15A_1'
-    'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A'
+    # 'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A'
+    'D1_RFscan_noRamp_ScanVert_1.33_1.53A_ZS0.38A_Cam0.15A'
 
 
 ]
@@ -145,13 +146,13 @@ for cam in cameras:
     
 # %% Filter zyla df if there are bad fits
 
-# col1 = 'XatomNumber'
-# # col2 = 'XatomNumber'
-# thresh = 9e7
+col1 = 'XatomNumber'
+# col2 = 'XatomNumber'
+thresh = 1e8
 
-# if (results['zyla'][col1] > thresh).any(): #or (results['zyla'][col2] > thresh).any():
+if (results['zyla'][col1] > thresh).any(): #or (results['zyla'][col2] > thresh).any():
 
-#     results['zyla'] = ImageAnalysisCode.FilterDataframe(results['zyla'], col1, thresh)
+    results['zyla'] = ImageAnalysisCode.FilterDataframe(results['zyla'], col1, thresh)
     
 
 
@@ -270,7 +271,7 @@ scanVar2 = 'VerticalBiasCurrent'
 # scanVar2 = 'CamBiasCurrent'
 
 
-dependentVar = 'YatomNumber'
+dependentVar = 'XatomNumber'
 ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
 
 # %%
@@ -311,21 +312,21 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 # # # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
 # # # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
 # # var1 = 'VerticalBiasCurrent'
-var1 = 'CamBiasCurrent'
-var2 = 'ZSBiasCurrent'
+# var1 = 'CamBiasCurrent'
+# var2 = 'ZSBiasCurrent'
 
-fitYVar = 'Ywidth'
+# fitYVar = 'Ywidth'
 
-df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
-                                            #fltedData,
-                                            var1, 
-                                            var2, 
-                                            fitXVar='TOF',
-                                            fitYVar=fitYVar,
-                                            do_plot=1, add_Text=1)
+# df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
+#                                             #fltedData,
+#                                             var1, 
+#                                             var2, 
+#                                             fitXVar='TOF',
+#                                             fitYVar=fitYVar,
+#                                             do_plot=1, add_Text=1)
 
 
-df1 = df1.reset_index()
+# df1 = df1.reset_index()
 
 
 # plt.figure(figsize=(5,4))
@@ -347,3 +348,7 @@ df1 = df1.reset_index()
 #         legend=True)
 
 #     print('Lifetime: ', round(popt[1]*10**(3), 3), ' s')
+
+#%% Save results dataframe?
+
+ImageAnalysisCode.saveResultsDF(results['zyla'], dayfolder)

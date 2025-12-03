@@ -3467,13 +3467,68 @@ def FilterDataframe(df, col1, threshold, col2=None):
     return df[condition]
 
 
-def saveResultsDF(results, dayfolder):
+# def saveResultsDF(results, dayfolder):
+    
+#     parentPath = os.path.join(dayfolder, 'Andor')
+    
+#     for folder_name, subDF in results['zyla'].groupby('Folder'):
+#         pkl_path = os.path.join(parentPath, folder_name, 'results.pkl')
+#         subDF.to_pickle(pkl_path)
+
+
+def saveResultsDF(df, dayfolder, save_pickle=True, save_csv=False):
+    """
+    Saves each folder's subset of a DataFrame into its folder,
+    asks user before saving or overwriting.
+    """
     
     parentPath = os.path.join(dayfolder, 'Andor')
-    
-    for folder_name, subDF in results['zyla'].groupby('Folder'):
-        pkl_path = os.path.join(parentPath, folder_name, 'results.pkl')
-        subDF.to_pickle(pkl_path)
+
+    for folder_name, subDF in df.groupby('Folder'):
+
+        # Ask if results should be saved
+        print(f"\nFolder: {folder_name}")
+        choice = input("Do you want to save results for this folder? (y/n): ").strip().lower()
+
+        if choice != "y":
+            print("Skipping...")
+            continue
+
+        # Make sure the folder exists
+        os.makedirs(folder_name, exist_ok=True)
+
+        # ----- PICKLE OPTION -----
+        if save_pickle:
+            pkl_path = os.path.join(parentPath, folder_name, "results.pkl")
+
+            # Check if file exists
+            if os.path.exists(pkl_path):
+                overwrite = input(f"{pkl_path} already exists. Overwrite? (y/n): ").strip().lower()
+                if overwrite != "y":
+                    print("Not overwriting.")
+                else:
+                    subDF.to_pickle(pkl_path)
+                    print(f"Saved: {pkl_path}")
+            else:
+                subDF.to_pickle(pkl_path)
+                print(f"Saved: {pkl_path}")
+
+        # ----- CSV OPTION -----
+        if save_csv:
+            csv_path = os.path.join(parentPath, folder_name, "results.csv")
+
+            if os.path.exists(csv_path):
+                overwrite = input(f"{csv_path} already exists. Overwrite? (y/n): ").strip().lower()
+                if overwrite != "y":
+                    print("Not overwriting.")
+                else:
+                    subDF.to_csv(csv_path, index=False)
+                    print(f"Saved: {csv_path}")
+            else:
+                subDF.to_csv(csv_path, index=False)
+                print(f"Saved: {csv_path}")
+
+
 
 #%% Maximilliano
 from PIL import Image
