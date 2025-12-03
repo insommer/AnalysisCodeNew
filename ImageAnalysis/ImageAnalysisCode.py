@@ -3467,6 +3467,14 @@ def FilterDataframe(df, col1, threshold, col2=None):
     return df[condition]
 
 
+def saveResultsDF(results, dayfolder):
+    
+    parentPath = os.path.join(dayfolder, 'Andor')
+    
+    for folder_name, subDF in results['zyla'].groupby('Folder'):
+        pkl_path = os.path.join(parentPath, folder_name, 'results.pkl')
+        subDF.to_pickle(pkl_path)
+
 #%% Maximilliano
 from PIL import Image
 import cv2
