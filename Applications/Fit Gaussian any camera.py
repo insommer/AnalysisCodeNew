@@ -1,4 +1,3 @@
-import DMDanalysis
 import numpy as np
 import matplotlib.pyplot as plt
 import os
@@ -6,29 +5,30 @@ import pandas as pd
 import re
 from scipy.optimize import curve_fit
 from ImageAnalysis import ImageAnalysisCode
+import datetime
 import configparser
+from PIL import Image
+import cv2
 
 
 plt.close('all')
 
-DA = DMDanalysis.DMDanalysis()
-
-dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-date = '11/13/2025'
+# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
+date = '12/1/2025'
 
 camera = 'Basler'
 powr = 15
 # camera = 'Andor'
 data_folder = [
 
-    fr'{camera}/Other lens 307 mm power {powr}',
-    fr'{camera}/Other lens 301 mm power {powr}',
-    fr'{camera}/Other lens 297 mm power {powr}',
-    fr'{camera}/Other lens 290 mm power {powr}',
-
-
-
-
+    fr'{camera}/SPX023AR.1 110 mm power {powr}',
+    fr'{camera}/SPX023AR.1 113 mm power {powr}',
+    fr'{camera}/SPX023AR.1 117 mm power {powr}',
+    fr'{camera}/SPX023AR.1 121 mm power {powr}',
+    fr'{camera}/SPX023AR.1 124 mm power {powr}',
+    fr'{camera}/SPX023AR.1 128 mm power {powr}',
+    fr'{camera}/SPX023AR.1 132 mm power {powr}',
 
 
     ]
@@ -48,10 +48,6 @@ columnstart=1
 columnend=-1
 ROI = [rowstart, rowend, columnstart, columnend]
 
-
-dayFolder = DA.GetDataLocation(date, dataRootFolder)
-dataPath = [ os.path.join(dayFolder, j) for j in data_folder]
-
 if camera == 'Basler':
     pixSize = 2 #um/px
 elif camera == 'FLIR':
@@ -60,6 +56,10 @@ elif camera == 'Andor':
     pixSize = 6.5 #um/pix
 
 #%%
+
+def GetDataLocation(Date, RootFolder):
+    path = os.path.join(RootFolder, datetime.datetime.strptime(Date, '%m/%d/%Y').strftime('%Y/%m-%Y/%d %b %Y'))
+    return path
 
 def GetFullFilePaths(dataPath_list):
 
@@ -99,6 +99,28 @@ def ExtractMetaData(filePaths):
     
     return height, width, pixNumber, pixFormat, dataType
 
+def CheckFile(file):
+    if isinstance(file, str) and file.endswith('.png'):  
+        arr = np.array(Image.open(file).convert('L'))
+        
+    elif isinstance(file, np.ndarray):
+        arr = file
+        
+    elif isinstance(file, str) and file.endswith('.raw'):
+        temp = np.fromfile(file, dtype = np.uint8)
+        arr = np.reshape(temp, (2160,3840)) # Basler dart resolution
+        
+    elif isinstance(file, str) and file.endswith('.pgm'):
+        img = Image.open(file)
+        arr = np.asarray(img, dtype=np.uint16)
+        rows, cols = np.shape(arr)
+        rows2discard = 2
+        arr = arr[rows2discard:, :]    
+    else:
+        raise ValueError(f"Unsupported file type or input: {file}")
+    
+    return arr
+
 def GetImages(dataPath_list, camera, ROI, metadata=None):
     
     imgs = []
@@ -127,14 +149,95 @@ def GetImages(dataPath_list, camera, ROI, metadata=None):
             
     else:
         for file in dataPath_list:
-            imgArr = DA.CheckFile(file)
+            imgArr = CheckFile(file)
             imgArr = imgArr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
 
             imgs.append(imgArr)
 
     return imgs
 
+def Rotate(image_arr, deg):
+    height, width = image_arr.shape[:2]
+    
+    center = (width / 2, height / 2)
+    
+    rotationMatrix = cv2.getRotationMatrix2D(center, deg, 1.0)
+    rotated = cv2.warpAffine(image_arr, rotationMatrix, (width, height))
+    
+    return rotated, rotationMatrix
+
+def Gauss1D(x,xc,sigX,A, offset):
+    G = A * np.exp(-2 * (x-xc)**2 / sigX**2) + offset
+    return G
+
+def FitGaussian(gaussImageFile, graph=True, graphOption='Wide'):
+    
+    beam = CheckFile(gaussImageFile)
+    Ny, Nx = beam.shape
+    x_index = np.linspace(0, Nx-1, Nx)
+    y_index = np.linspace(0, Ny-1, Ny)
+    
+    max_index = np.unravel_index(np.argmax(beam), beam.shape)
+    max_x, max_y = max_index
+
+    vert = beam[:, max_y]
+    horiz = beam[max_x, :]
+    
+    sigGuess = 40
+    offset = 0
+    
+    guessX = [max_y, sigGuess, np.max(horiz), offset]
+    paramX,_ = curve_fit(Gauss1D, x_index, horiz, p0=guessX)
+    x_fit1 = np.linspace(0, Nx-1, 5000)
+    y_fit1 = Gauss1D(x_fit1, paramX[0], paramX[1], paramX[2], paramX[3])
+
+    guessY = [max_x, sigGuess, np.max(vert), offset]
+    paramY,_ = curve_fit(Gauss1D, y_index, vert, p0=guessY)
+    x_fit2 = np.linspace(0,Ny-1, 5000)
+    y_fit2 = Gauss1D(x_fit2, paramY[0], paramY[1], paramY[2], paramY[3])
+    
+    centerX = int(paramX[0])
+    centerY = int(paramY[0])
+            
+    if graph:
+        fig, ax = plt.subplots(1,3)
+        
+        ax[1].plot(x_fit1, y_fit1,'r',linewidth=3)
+        ax[1].scatter(x_index, horiz, s=20)
+        ax[1].set_title('Fit vs. X')
+        
+        text_x = f"x0 = {int(paramX[0])} \nσ = {paramX[1]:.2f} px \nA = {paramX[2]:.2f}"
+        ax[1].text(0.35, 0.95, text_x, transform=ax[1].transAxes, fontsize=10,
+                    verticalalignment='top', bbox=dict(facecolor='white', alpha=0.8))
+        
+        ax[2].plot(x_fit2,y_fit2,'r',linewidth=3)
+        ax[2].scatter(y_index, vert, s=20)
+        ax[2].set_title('Fit vs. Y')
+        
+        text_y = f"y0 = {int(paramY[0])} \nσ = {paramY[1]:.2f} px \nA = {paramY[2]:.2f}"
+        ax[2].text(0.05, 0.95, text_y, transform=ax[2].transAxes, fontsize=10,
+                    verticalalignment='top', bbox=dict(facecolor='white', alpha=0.8))
+        
+        if graphOption == 'Narrow':
+            
+            ax[1].set_xlim(paramX[0]-4*paramX[1], paramX[0]+4*paramX[1])
+            ax[2].set_xlim(paramY[0]-4*paramY[1], paramY[0]+4*paramY[1])
+            
+            ax[0].imshow(beam, extent=[paramX[0]-1, 
+                                       paramX[0]+1, 
+                                       paramY[0]-1, 
+                                       paramY[0]+1])
+        else:
+            ax[0].imshow(beam*-1,cmap='binary')
+            ax[0].imshow(beam,cmap='jet')
+        
+        ax[0].set_title('Image')        
+    return paramX, paramY
+
 #%%
+
+dayFolder = GetDataLocation(date, dataRootFolder)
+dataPath = [ os.path.join(dayFolder, j) for j in data_folder]
 
 df = pd.DataFrame(columns=['File', 'Condition', 'Value', 'Xcenter', 'Ycenter', 'Xwidth', 'Ywidth', 'Xamp', 'Yamp'])
 Xcenters = []; Ycenters = []
@@ -192,9 +295,8 @@ images = GetImages(fullpath, camera, ROI, metaData)
 
 for image_arr in images:
     
-    image_arr, _ = DA.Rotate(image_arr, angle)
-        
-    paramX, paramY = DA.FitGaussian(image_arr, doPlot, 'wide')
+    image_arr, _ = Rotate(image_arr, angle)
+    paramX, paramY = FitGaussian(image_arr, doPlot, 'wide')
     
     Xcenter = paramX[0]*pixSize
     Xwidth = paramX[1]*pixSize
