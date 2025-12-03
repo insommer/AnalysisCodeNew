@@ -2295,7 +2295,8 @@ def plotImgAndFitResult(imgs, popts, bgs=[], imgs2=None,
                         rcParams={'font.size': 10, 'xtick.labelsize': 9, 'ytick.labelsize': 9}): 
     
     rcParams0 = plt.rcParams # Store the original plt params
-    plt.rcParams.update(rcParams | {'image.cmap': 'jet'})
+    plt.rcParams.update({'image.cmap': 'jet'})
+
     
     axDict = {'x': 0, 'y':1}
 
