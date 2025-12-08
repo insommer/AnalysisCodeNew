@@ -3476,7 +3476,7 @@ def FilterDataframe(df, col1, threshold, col2=None):
 #         subDF.to_pickle(pkl_path)
 
 
-def saveResultsDF(df, dayfolder, save_pickle=True, save_csv=False):
+def saveResultsDF(df, dayfolder, save_pickle=False, save_csv=True):
     """
     Saves each folder's subset of a DataFrame into its folder,
     asks user before saving or overwriting.
