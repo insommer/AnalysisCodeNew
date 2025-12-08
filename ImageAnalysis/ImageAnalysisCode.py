@@ -3474,6 +3474,10 @@ def saveResultsDF(results, dayfolder):
     for folder_name, subDF in results['zyla'].groupby('Folder'):
         pkl_path = os.path.join(parentPath, folder_name, 'results.pkl')
         subDF.to_pickle(pkl_path)
+        
+        
+        csv_path = os.path.join(parentPath, folder_name, 'results.csv')
+        subDF.to_csv(csv_path)
 
 #%% Maximilliano
 from PIL import Image
