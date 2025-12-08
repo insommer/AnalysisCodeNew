@@ -9,35 +9,21 @@ from scipy import constants
 ####################################
 #Set the date and the folder name
 #################################### 1.0 = 85.5A , 0.9 = 77.4A , 0.8 = 69.5A , 0.7 = 61.6A 
-dataRootFolder = r"F:\Data"
+dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'F:\Data'
 
-date = '11/25/2025'
+date = '12/03/2025'
 
 data_folder = [
     # 'MOT atoms vs LF attn TOF 0.2 ms_1',
-    # 'MOT atoms vs LF VCO Attn 4.5 V TOF 0.2 ms',
-    # 'MOT atoms vs LF VCO Attn 4.5 V TOF 0.2 ms_1',
-    # 'cMOT atoms vs LF attn TOF 0.5 ms'
-    # 'cMOT atoms vs LF VCO Attn 5 V TOF 0.5 ms'
-    # 'D1 thermo_1',
-    # '10WRF Driver test 50 khz setp center 228.2 2W_1',
-    # '10WRF Driver test 50 khz setp center 228.2 3W',
-    # 'RF_scan_cmot228_228.4_tof0.5_25kHzStep_2W',
-    # 'RF_scan_cmot228_228.4_tof0.5_25kHzStep_3W',
-    # 'RF_scan_cmot228_228.4_tof0.5_25kHzStep_3W',
-    # 'RF_scan_cmot228.4_228.8_tof0.5_25kHzStep_3W_1',
-    # # 'RF_scan_cmot227.6_228_tof0.5_25kHzStep_4W',
-    # 'RF_scan_cmot228.8_229.2_tof0.5_25kHzStep_3W',
-    # 'RF_scan_cmot229.2_230.2_tof0.5_50kHzStep_3W',
-    # 'RF_scan_cmot229.175_230.175_tof0.5_50kHzStep_3W',
-    # 'RF_scan_cmot228_228.4_tof0.5_10kHzStep_4W',
-    'RF_scan_D1_227_229.5_tof0.5_50kHzStep_2W_vert1.03A',
-    # 'RF_scan_D1_228_228.5_tof0.5_25kHzStep_2W',
-    # 'D1 test_1'
-    # 'RF_scan_D1_227_229.5_tof0.5_50kHzStep_3W_1',
-    # 'RF_scan_D1_227_229.5_tof0.5_50kHzStep_3W_2',
-    # 'RF_scan_D1_227_229.5_tof0.5_50kHzStep_2W'
+    # 'D1_atoms_noRamp_Vert1.33A_ZS0.38A_cam0.15A',
+    # 'D1_atoms_noRamp_Vert1.33A_ZS0.38A_Cam0.15A'
+    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_ScanCam0_0.15A_1'
+    # 'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
+    # 'D1_RFscan_noRamp_ScanVert0.83_1.23A_ZS0.38A_Cam0.15A_1'
+    # 'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A'
+    'D1_RFscan_noRamp_ScanVert_1.33_1.53A_ZS0.38A_Cam0.15A'
+
 
 ]
 
@@ -160,13 +146,19 @@ for cam in cameras:
     
 # %% Filter zyla df if there are bad fits
 
-# col1 = 'Ywidth'
-# # col2 = 'YatomNumber'
-# thresh = 1800
+col1 = 'XatomNumber'
+# col2 = 'XatomNumber'
+thresh = 1e8
 
-# if (results['zyla'][col1] > thresh).any(): #or (results['zyla'][col2] > thresh).any():
+if (results['zyla'][col1] > thresh).any(): #or (results['zyla'][col2] > thresh).any():
 
-#     results['zyla'] = ImageAnalysisCode.FilterDataframe(results['zyla'], col1, thresh)
+    results['zyla'] = ImageAnalysisCode.FilterDataframe(results['zyla'], col1, thresh)
+    
+
+
+# %%
+
+# results['zyla'] = results['zyla'].dropna()
 
 # %%
 
@@ -273,20 +265,26 @@ for cam in cameras:
 # # scanVar2 = 'D1PowerRatio'
 
 scanVar1 = 'RF_FRQ_MHz'
-scanVar2 = 'RF_AntennaPower'
-
-
-dependentVar = 'YatomNumber'
-ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
-
-# %%
-
-scanVar1 = 'RF_FRQ_MHz'
-scanVar2 = 'RF_AntennaPower'
+# # scanVar2 = 'RF_AntennaPower'
+scanVar2 = 'VerticalBiasCurrent'
+# scanVar2 = 'ZSBiasCurrent'
+# scanVar2 = 'CamBiasCurrent'
 
 
 dependentVar = 'XatomNumber'
 ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
+
+# %%
+
+# scanVar1 = 'RF_FRQ_MHz'
+# # scanVar2 = 'RF_AntennaPower'
+# # scanVar2 = 'VerticalBiasCurrent'
+# # scanVar2 = 'ZSBiasCurrent'
+# scanVar2 = 'CamBiasCurrent'
+
+
+# dependentVar = 'XatomNumber'
+# ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
 
 
 # %% THERMOMETRY
@@ -305,14 +303,18 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 # var1 = 'D1RampTime_ms'
 # var2 = 'D1Time_ms'
 
-# # # # var2 = 'D1RampTime_ms'
-# # # # var1 = 'D1TotalTime_ms'
-
-# # # # # var1 = 'D1CoolingPowerRamp_mW'
 # # # # # var2 = 'D1RampTime_ms'
+# # # # # var1 = 'D1TotalTime_ms'
 
-# # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
-# # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
+# # # # # # var1 = 'D1CoolingPowerRamp_mW'
+# # # # # # var2 = 'D1RampTime_ms'
+
+# # # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
+# # # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
+# # var1 = 'VerticalBiasCurrent'
+# var1 = 'CamBiasCurrent'
+# var2 = 'ZSBiasCurrent'
+
 # fitYVar = 'Ywidth'
 
 # df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
@@ -346,3 +348,7 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 #         legend=True)
 
 #     print('Lifetime: ', round(popt[1]*10**(3), 3), ' s')
+
+#%% Save results dataframe?
+
+ImageAnalysisCode.saveResultsDF(results['zyla'], dayfolder)
