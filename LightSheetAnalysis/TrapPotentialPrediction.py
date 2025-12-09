@@ -60,9 +60,12 @@ if camera == 'Andor':
 else:
     metaData = None
     
-images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)   
+images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)
 
-df = LSAnalysisCode.ExtractRawCts(fullPath, images)
+bgVal = LSAnalysisCode.EstimateBGvalue(images[0])
+images_corrected = [img - bgVal for img in images]
+
+df = LSAnalysisCode.ExtractRawCts(fullPath, images_corrected)
 
 
 colsForGrouping = ['Power (W)', 'Current (mA)']
@@ -78,7 +81,7 @@ stats.columns = colsForGrouping + ['_'.join(col).strip() for col in stats.column
 factor = LSAnalysisCode.TotalCts2power(stats)
 
 # calculate intensity from the image
-df = LSAnalysisCode.GetMaxIntensity(images, df, pixArea_m, factor)
+df = LSAnalysisCode.GetMaxIntensity(images_corrected, df, pixArea_m, factor)
 stats['Max Intensity (W/m2)'] = df.groupby(colsForGrouping)['Max Intensity (W/m2)'].mean().reset_index()['Max Intensity (W/m2)']
 
 # calculate dipole potential, fit vs. laser current
