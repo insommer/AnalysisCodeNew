@@ -7,8 +7,8 @@ from LightSheetAnalysis import LSAnalysisCode
 
 plt.close('all')
 
-dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-# dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
+# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
 
 date = '12/9/2025'
 # date = '1/31/2025'
@@ -27,6 +27,8 @@ data_folder = [
     
     ]
 
+bg_folder = fr'{camera}/One LS redo BG'
+
 rowstart=1
 rowend=-1
 columnstart=1
@@ -36,6 +38,9 @@ ROI = [rowstart, rowend, columnstart, columnend]
 dayFolder = ImageAnalysisCode.GetDayFolder(date, dataRootFolder)
 dataPath = [ os.path.join(dayFolder, j) for j in data_folder]
 fullPath = ImageAnalysisCode.GetFullFilePaths(dataPath)
+
+bgPath = os.path.join(dayFolder, bg_folder)
+bgFullPath = ImageAnalysisCode.GetFullFilePaths([bgPath])
 
 if camera == 'FLIR':
     pixSize_um = 3.75
@@ -60,12 +65,10 @@ else:
     metaData = None
     
 images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)
-
-bgVal = LSAnalysisCode.EstimateBGvalue(images[0])
-images_corrected = [img - bgVal for img in images]
+# images_corrected = LSAnalysisCode.BGsubtraction(bgFullPath, images, ROI, metaData)
+images_corrected = LSAnalysisCode.BGsubtraction_alt(images)
 
 df = LSAnalysisCode.ExtractRawCts(fullPath, images_corrected)
-
 
 colsForGrouping = ['Power (W)', 'Current (mA)']
 colsForAnalysis = ['TotalCts', 'MaxCts']

@@ -181,3 +181,36 @@ def EstimateBGvalue(img, region_size=50, padding=10):
     region = img[row_start:row_end, col_start:col_end]
     
     return float(np.mean(region))
+
+
+
+def BGsubtraction(bgFullPath, imagesList, ROI, metaData):
+    
+    imageBG = ExtractImages(bgFullPath, ROI, metaData)
+    plt.imshow(imageBG[0])
+    
+    corrected_images = []
+    for img in imagesList:
+        corrected = img - imageBG[0]
+        corrected = np.clip(corrected, 0, None)
+        corrected_images.append(corrected)
+    
+    return corrected_images
+
+
+
+def BGsubtraction_alt(imagesList):
+    
+    bgVal = EstimateBGvalue(imagesList[0])
+    
+    corrected_images = []
+    for img in imagesList:
+        corrected = img - bgVal
+        # corrected = np.clip(corrected, 0, None)
+        corrected_images.append(corrected)
+    return corrected_images
+    
+        
+
+
+
