@@ -135,3 +135,24 @@ def ExtractRawCts(dataPathList, imagesList):
                        ignore_index=True)
     
     return df
+
+
+
+def EstimateBGvalue(img, region_size=50, padding=10):
+    
+    H, W = img.shape
+    
+    # region boundaries
+    row_end   = H - padding
+    col_end   = W - padding
+    row_start = row_end - region_size
+    col_start = col_end - region_size
+
+    # ensure region stays inside the image
+    if row_start < 0 or col_start < 0:
+        raise ValueError("Region extends outside the image. Reduce region size or padding.")
+    
+    # extract region
+    region = img[row_start:row_end, col_start:col_end]
+    
+    return float(np.mean(region))
