@@ -13,22 +13,19 @@ import cv2
 
 plt.close('all')
 
-# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '12/1/2025'
+dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+# dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
+date = '12/9/2025'
 
 camera = 'Basler'
 powr = 15
-# camera = 'Andor'
+camera = 'Andor'
 data_folder = [
 
-    fr'{camera}/SPX023AR.1 110 mm power {powr}',
-    fr'{camera}/SPX023AR.1 113 mm power {powr}',
-    fr'{camera}/SPX023AR.1 117 mm power {powr}',
-    fr'{camera}/SPX023AR.1 121 mm power {powr}',
-    fr'{camera}/SPX023AR.1 124 mm power {powr}',
-    fr'{camera}/SPX023AR.1 128 mm power {powr}',
-    fr'{camera}/SPX023AR.1 132 mm power {powr}',
+    # fr'{camera}/One LS redo 1.06 mW 77.2 mA',
+    fr'{camera}/One LS redo 4.75 mW 90.7 mA',
+    # fr'{camera}/One LS redo 8.4 mW 105.1 mA',
+    fr'{camera}/One LS redo 12.64 mW 122.7 mA',
 
     ]
 
@@ -37,7 +34,7 @@ commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
 
-doPlot = 0
+doPlot = 1
 angle = 0
 
 rowstart=1
