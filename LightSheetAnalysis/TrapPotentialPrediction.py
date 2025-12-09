@@ -16,10 +16,9 @@ date = '12/9/2025'
 camera = 'Andor'
 
 data_folder = [
-    fr'{camera}/One LS redo 1.06 mW 77.2 mA',
-    fr'{camera}/One LS redo 4.75 mW 90.7 mA',
-    fr'{camera}/One LS redo 8.4 mW 105.1 mA',
-    fr'{camera}/One LS redo 12.64 mW 122.7 mA',
+    fr'{camera}/One LS redo 7.41 mW 101.2 mA',
+    fr'{camera}/One LS redo 12.79 mW 122.7 mA',
+    fr'{camera}/One LS redo 19 mW 150.9 mA',
     # fr'{camera}/AM 5.32 mW 99.92 mA',
     # fr'{camera}/AM 8.36 mW 105.5 mA',
     # fr'{camera}/AM 11.75 mW 111.53 mA',
@@ -79,6 +78,7 @@ stats.columns = colsForGrouping + ['_'.join(col).strip() for col in stats.column
 
 # fit cts vs. power, get conversion factor
 factor = LSAnalysisCode.TotalCts2power(stats)
+# factor = LSAnalysisCode.MaxCts2power(stats)
 
 # calculate intensity from the image
 df = LSAnalysisCode.GetMaxIntensity(images_corrected, df, pixArea_m, factor)

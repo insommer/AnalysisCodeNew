@@ -47,6 +47,31 @@ def TotalCts2power(stats, plot=True):
     
     return factor_CtsPerW
 
+
+def MaxCts2power(stats, plot=True):
+    
+    param_tot, _ = curve_fit(lin, stats['Power (W)'], stats['MaxCts_mean'])
+    m,b = param_tot
+
+    factor_CtsPerW = m # [Cts/W]
+
+    if plot:
+        # plot total cts vs. mW
+        plt.figure()
+
+        xfit = np.linspace(min(stats['Power (W)']), max(stats['Power (W)']), 100)
+        yfit = lin(xfit, m, b)
+        plt.plot(xfit*1e3, yfit)
+        
+        # convert to mW
+        plt.errorbar(stats['Power (W)']*1e3, stats['MaxCts_mean'], yerr=stats['MaxCts_std'],fmt='o',capsize=3)
+        plt.xlabel('Power (mW)')
+        plt.ylabel('MaxCts_mean Cts')
+        
+        plt.tight_layout()
+    
+    return factor_CtsPerW
+
 def GetMaxIntensity(imagesList, df, pixArea_m, factor):
             
     maxIntensity = []
