@@ -7,18 +7,19 @@ from LightSheetAnalysis import LSAnalysisCode
 
 plt.close('all')
 
-dataRootFolder = r'C:\Users\wmmax\Documents\Lehigh\Sommer Group\Experiment Data'
+dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 
-date = '1/31/2025'
+date = '12/9/2025'
 
-camera = 'FLIR'
+camera = 'Andor'
 
 data_folder = [
-    fr'{camera}/AM 5.32 mW 99.92 mA',
-    fr'{camera}/AM 8.36 mW 105.5 mA',
-    fr'{camera}/AM 11.75 mW 111.53 mA',
-    fr'{camera}/AM 14.5 mW 116.87 mA',
-    fr'{camera}/AM 17.4 mW 122.8 mA',
+    fr'{camera}/One LS 0.75 mW 75.7 mA',
+    fr'{camera}/One LS 2.1 mW 81.6 mA',
+    fr'{camera}/One LS 3.3 mW 87 mA',
+    fr'{camera}/One LS 4.65 mW 93 mA',
+
+    
     ]
 
 rowstart=1
@@ -29,6 +30,7 @@ ROI = [rowstart, rowend, columnstart, columnend]
 
 dayFolder = ImageAnalysisCode.GetDayFolder(date, dataRootFolder)
 dataPath = [ os.path.join(dayFolder, j) for j in data_folder]
+fullPath = ImageAnalysisCode.GetFullFilePaths(dataPath)
 
 if camera == 'FLIR':
     pixSize_um = 3.75
@@ -48,12 +50,12 @@ pixArea_m = (pixSize_um * 1e-6) ** 2 # pixel area [meter^2]
 #%% Extract counts from images
 
 if camera == 'Andor':
-    metaData = ImageAnalysisCode.ExtractMetaData(dataPath)
+    metaData = ImageAnalysisCode.ExtractMetaData(fullPath)
 else:
     metaData = None    
     
 
-df = LSAnalysisCode.ExtractRawCts(dataPath, ROI, metaData)
+df = LSAnalysisCode.ExtractRawCts_v2(fullPath, ROI, metaData)
 
 
 colsForGrouping = ['Power (W)', 'Current (mA)']

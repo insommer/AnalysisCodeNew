@@ -143,3 +143,46 @@ def ExtractRawCts(dataPathList, ROI, metaData=None):
                             ], 
                            ignore_index=True)
     return df
+
+def ExtractRawCts_v2(fullPath, ROI, metaData=None):
+    
+    df = pd.DataFrame(columns=['File',
+                               'Power (W)','Current (mA)',
+                               'TotalCts','MaxCts',
+                               'Max Intensity (W/m2)'
+                               ])
+    
+    # loops thru folders
+    for file in fullPath:
+            
+        # <anything> <number> mW <number> mA
+        match = re.search(r"(\d+(?:\.\d*)?)\s*mW.*?(\d+(?:\.\d*)?)\s*mA", file, re.IGNORECASE)
+        if match:
+            power = float(match.group(1))
+            current = float(match.group(2))
+        else:
+            power = None
+            current = None
+        
+            
+        # for Andor files
+        if file.endswith('.dat'):
+            image_arr = ImageAnalysisCode.GetImages(file, 'Andor', ROI, metaData)
+            print(image_arr)
+        else:
+            image_arr = ImageAnalysisCode.CheckFile(file)
+            image_arr = image_arr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
+
+        cts_tot = np.sum(np.sum(image_arr))
+        cts_max = np.max(image_arr)
+        
+        # store values in df
+        df = pd.concat([df, pd.DataFrame({'File':[file],
+                                          'Power (W)':[power*1e-3],
+                                          'Current (mA)':[current],
+                                          'TotalCts':[cts_tot],
+                                          'MaxCts':[cts_max],
+                                          })
+                        ], 
+                       ignore_index=True)
+    return df
