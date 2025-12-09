@@ -7,9 +7,11 @@ from LightSheetAnalysis import LSAnalysisCode
 
 plt.close('all')
 
-dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
 
 date = '12/9/2025'
+# date = '1/31/2025'
 
 camera = 'Andor'
 
@@ -18,6 +20,10 @@ data_folder = [
     fr'{camera}/One LS 2.1 mW 81.6 mA',
     fr'{camera}/One LS 3.3 mW 87 mA',
     fr'{camera}/One LS 4.65 mW 93 mA',
+    # fr'{camera}/AM 5.32 mW 99.92 mA',
+    # fr'{camera}/AM 8.36 mW 105.5 mA',
+    # fr'{camera}/AM 11.75 mW 111.53 mA',
+    # fr'{camera}/AM 14.5 mW 116.87 mA',
 
     
     ]
@@ -52,10 +58,11 @@ pixArea_m = (pixSize_um * 1e-6) ** 2 # pixel area [meter^2]
 if camera == 'Andor':
     metaData = ImageAnalysisCode.ExtractMetaData(fullPath)
 else:
-    metaData = None    
+    metaData = None
     
+images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)   
 
-df = LSAnalysisCode.ExtractRawCts_v2(fullPath, ROI, metaData)
+df = LSAnalysisCode.ExtractRawCts(fullPath, images)
 
 
 colsForGrouping = ['Power (W)', 'Current (mA)']
@@ -64,13 +71,19 @@ colsForAnalysis = ['TotalCts', 'MaxCts']
 stats = df.groupby(colsForGrouping)[colsForAnalysis].agg(['mean','std']).reset_index()
 stats.columns = colsForGrouping + ['_'.join(col).strip() for col in stats.columns[2:]]
 
+
 #%% Calculate dipole potential
 
 # fit cts vs. power, get conversion factor
 factor = LSAnalysisCode.TotalCts2power(stats)
 
+df = LSAnalysisCode.GetMaxIntensity_v2(images, df, pixArea_m, factor)
+
+stats['Max Intensity (W/m2)'] = df.groupby(colsForGrouping)['Max Intensity (W/m2)'].mean().reset_index()['Max Intensity (W/m2)']
+
+#%%
+
 # Calculate intensity of image, fit intensity vs. current
-stats = LSAnalysisCode.GetMaxIntensity(dataPath, stats, pixArea_m, factor)
 
 # dipole potential
 Udip, Temp_uK = LSAnalysisCode.GetDipolePotential(stats)

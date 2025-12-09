@@ -73,6 +73,20 @@ def GetMaxIntensity(dataPathList, stats, pixArea_m, factor):
     
     return stats
 
+def GetMaxIntensity_v2(imagesList, df, pixArea_m, factor):
+            
+    maxIntensity = []
+    
+    for img in imagesList:
+        
+        power_arr = img / factor
+        intensity_arr = power_arr / pixArea_m
+        maxIntensity.append(np.max(intensity_arr))
+    
+    df['Max Intensity (W/m2)'] = maxIntensity
+    
+    return df
+
 
 def GetDipolePotential(stats, maxCurrent_mA = 325, doPlot=True):
     
@@ -85,7 +99,7 @@ def GetDipolePotential(stats, maxCurrent_mA = 325, doPlot=True):
         
     # calculate dipole potential from max intensity
     U_dip = U0 * maxI_fit
-    Temp_uK = U_dip / s.k * 1e6
+    Temp_uK = U_dip / s.k * 1e6 # temp in microkelvin
     
     if doPlot:
         fig, ax1 = plt.subplots(figsize=(4, 3))
@@ -96,88 +110,48 @@ def GetDipolePotential(stats, maxCurrent_mA = 325, doPlot=True):
         fig.tight_layout()
         
     return U_dip, Temp_uK
-    
 
-def ExtractRawCts(dataPathList, ROI, metaData=None):
-    
-    df = pd.DataFrame(columns=['File',
-                               'Power (W)','Current (mA)',
-                               'TotalCts','MaxCts',
-                               'Max Intensity (W/m2)'
-                               ])
-    
-    # loops thru folders
-    for folder in dataPathList:
-            
-        # <anything> <number> mW <number> mA
-        match = re.search(r"(\d+(?:\.\d*)?)\s*mW.*?(\d+(?:\.\d*)?)\s*mA", folder, re.IGNORECASE)
-        if match:
-            power = float(match.group(1))
-            current = float(match.group(2))
-        else:
-            power = None
-            current = None
 
-        # loop thru files in folder
-        for filename in os.listdir(folder):
-            
-            path = os.path.join(folder,filename)
-            
-            # for Andor files
-            if filename.endswith('.dat') and metaData is not None:
-                image_arr = ImageAnalysisCode.GetImages(path, 'Andor', ROI, metaData)
-            else:
-                image_arr = ImageAnalysisCode.CheckFile(path)
-                image_arr = image_arr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
 
-            cts_tot = np.sum(np.sum(image_arr))
-            cts_max = np.max(image_arr)
-            
-            # store values in df
-            df = pd.concat([df, pd.DataFrame({'File':[path],
-                                              'Power (W)':[power*1e-3],
-                                              'Current (mA)':[current],
-                                              'TotalCts':[cts_tot],
-                                              'MaxCts':[cts_max],
-                                              })
-                            ], 
-                           ignore_index=True)
-    return df
-
-def ExtractRawCts_v2(fullPath, ROI, metaData=None):
+def ExtractImages(fullPathList, ROI, metaData=None):
     
-    df = pd.DataFrame(columns=['File',
-                               'Power (W)','Current (mA)',
-                               'TotalCts','MaxCts',
-                               'Max Intensity (W/m2)'
-                               ])
-    
-    # loops thru folders
-    for file in fullPath:
-            
-        # <anything> <number> mW <number> mA
-        match = re.search(r"(\d+(?:\.\d*)?)\s*mW.*?(\d+(?:\.\d*)?)\s*mA", file, re.IGNORECASE)
-        if match:
-            power = float(match.group(1))
-            current = float(match.group(2))
-        else:
-            power = None
-            current = None
+    if fullPathList[0].endswith('.dat') or metaData is not None:
+        imgs = ImageAnalysisCode.GetImages(fullPathList, 'Andor', ROI, metaData)
         
-            
-        # for Andor files
-        if file.endswith('.dat'):
-            image_arr = ImageAnalysisCode.GetImages(file, 'Andor', ROI, metaData)
-            print(image_arr)
-        else:
+    else:
+        imgs = []
+        for file in fullPathList:
             image_arr = ImageAnalysisCode.CheckFile(file)
-            image_arr = image_arr[ROI[0]:ROI[1], ROI[2]:ROI[3]]
+            imgs.append(image_arr)
+    
+    return imgs
 
-        cts_tot = np.sum(np.sum(image_arr))
-        cts_max = np.max(image_arr)
+
+def ExtractRawCts(dataPathList, imagesList):
+    
+    df = pd.DataFrame(columns=['File',
+                               'Power (W)','Current (mA)',
+                               'TotalCts','MaxCts',
+                               'Max Intensity (W/m2)'
+                               ])
+    
+    # loops thru folders
+    for j in range(len(imagesList)):
+            
+        # <anything> <number> mW <number> mA
+        match = re.search(r"(\d+(?:\.\d*)?)\s*mW.*?(\d+(?:\.\d*)?)\s*mA", dataPathList[j], re.IGNORECASE)
+        if match:
+            power = float(match.group(1))
+            current = float(match.group(2))
+        else:
+            power = None
+            current = None            
+
+        cts_tot = np.sum(np.sum(imagesList[j]))
+        cts_max = np.max(imagesList[j])
         
         # store values in df
-        df = pd.concat([df, pd.DataFrame({'File':[file],
+        df = pd.concat([df, pd.DataFrame({'File':[dataPathList[j]],
                                           'Power (W)':[power*1e-3],
                                           'Current (mA)':[current],
                                           'TotalCts':[cts_tot],
@@ -185,4 +159,5 @@ def ExtractRawCts_v2(fullPath, ROI, metaData=None):
                                           })
                         ], 
                        ignore_index=True)
+    
     return df
