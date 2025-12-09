@@ -47,33 +47,7 @@ def TotalCts2power(stats, plot=True):
     
     return factor_CtsPerW
 
-
-def GetMaxIntensity(dataPathList, stats, pixArea_m, factor):
-            
-    maxAvgIntensity = []
-    
-    for folder in dataPathList:
-
-        maxI = []
-        
-        for filename in os.listdir(folder):
-            path = os.path.join(folder, filename)
-            image_arr = ImageAnalysisCode.CheckFile(path)
-            
-            power_arr = image_arr / factor
-            intensity_arr = power_arr / pixArea_m
-            
-            maxI.append(np.max(intensity_arr))
-        
-        # calculate avg max intensity over all images in this folder
-        avgI = np.mean(maxI)
-        maxAvgIntensity.append(avgI)
-    
-    stats['Max Intensity (W/m2)'] = maxAvgIntensity
-    
-    return stats
-
-def GetMaxIntensity_v2(imagesList, df, pixArea_m, factor):
+def GetMaxIntensity(imagesList, df, pixArea_m, factor):
             
     maxIntensity = []
     

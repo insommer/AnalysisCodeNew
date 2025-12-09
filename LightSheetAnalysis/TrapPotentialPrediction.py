@@ -77,13 +77,9 @@ stats.columns = colsForGrouping + ['_'.join(col).strip() for col in stats.column
 # fit cts vs. power, get conversion factor
 factor = LSAnalysisCode.TotalCts2power(stats)
 
-df = LSAnalysisCode.GetMaxIntensity_v2(images, df, pixArea_m, factor)
-
+# calculate intensity from the image
+df = LSAnalysisCode.GetMaxIntensity(images, df, pixArea_m, factor)
 stats['Max Intensity (W/m2)'] = df.groupby(colsForGrouping)['Max Intensity (W/m2)'].mean().reset_index()['Max Intensity (W/m2)']
 
-#%%
-
-# Calculate intensity of image, fit intensity vs. current
-
-# dipole potential
+# calculate dipole potential, fit vs. laser current
 Udip, Temp_uK = LSAnalysisCode.GetDipolePotential(stats)
