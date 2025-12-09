@@ -3497,7 +3497,7 @@ def saveResultsDF(df, dayfolder, save_pickle=False, save_csv=True):
         # Make sure the folder exists
         os.makedirs(folder_name, exist_ok=True)
 
-        # ----- PICKLE OPTION -----
+        # PICKLE
         if save_pickle:
             pkl_path = os.path.join(parentPath, folder_name, "results.pkl")
 
@@ -3513,7 +3513,7 @@ def saveResultsDF(df, dayfolder, save_pickle=False, save_csv=True):
                 subDF.to_pickle(pkl_path)
                 print(f"Saved: {pkl_path}")
 
-        # ----- CSV OPTION -----
+        # CSV
         if save_csv:
             csv_path = os.path.join(parentPath, folder_name, "results.csv")
 
