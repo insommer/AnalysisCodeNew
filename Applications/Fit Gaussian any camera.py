@@ -15,18 +15,18 @@ plt.close('all')
 
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '12/9/2025'
+date = '12/10/2025'
 
 camera = 'Basler'
 powr = 15
 camera = 'Andor'
 data_folder = [
+    # fr'{camera}/Focus LS 3.302 mm',
+    # fr'{camera}/Focus LS 3.556 mm',
+    # fr'{camera}/Focus LS 3.81 mm',
+    # fr'{camera}/Focus LS 4.064 mm',
+    fr'{camera}/Measure separation'
 
-    # fr'{camera}/One LS redo 1.06 mW 77.2 mA',
-    # fr'{camera}/One LS redo 4.75 mW 90.7 mA',
-    # fr'{camera}/One LS redo 8.4 mW 105.1 mA',
-    # fr'{camera}/One LS redo 12.64 mW 122.7 mA',
-    fr'{camera}/One LS final 19.1 mW 150 mA',
 
 
     ]
@@ -111,7 +111,7 @@ Xcenters = []; Ycenters = []; Xwidths = []; Ywidths = []; Xamps = []; Yamps = []
 for image_arr in images:
     
     image_arr, _ = ImageAnalysisCode.Rotate(image_arr, angle)
-    paramX, paramY = ImageAnalysisCode.FitGaussian(image_arr, doPlot, 'wide')
+    paramX, paramY = ImageAnalysisCode.FitGaussian(image_arr, doPlot, 'Narrow')
     
     Xcenter = paramX[0]*pixSize
     Xwidth = paramX[1]*pixSize

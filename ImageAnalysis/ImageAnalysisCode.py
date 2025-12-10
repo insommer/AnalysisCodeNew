@@ -3666,11 +3666,13 @@ def FitGaussian(gaussImageFile, graph=True, graphOption='Wide'):
     
     guessX = [max_y, sigGuess, np.max(horiz), offset]
     paramX,_ = curve_fit(Gauss1D, x_index, horiz, p0=guessX)
+    paramX[1] = np.abs(paramX[1]) # ensure positive width
     x_fit1 = np.linspace(0, Nx-1, 5000)
     y_fit1 = Gauss1D(x_fit1, paramX[0], paramX[1], paramX[2], paramX[3])
 
     guessY = [max_x, sigGuess, np.max(vert), offset]
     paramY,_ = curve_fit(Gauss1D, y_index, vert, p0=guessY)
+    paramY[1] = np.abs(paramY[1])
     x_fit2 = np.linspace(0,Ny-1, 5000)
     y_fit2 = Gauss1D(x_fit2, paramY[0], paramY[1], paramY[2], paramY[3])
     
