@@ -21,7 +21,7 @@ from skimage.filters import threshold_otsu
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage import center_of_mass
 from scipy import constants
-
+import re
 import os
 import PIL
 import datetime
@@ -3742,3 +3742,61 @@ def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
             ax.set_ylabel(col+' (μm)')
             ax.text(0.3, 0.85, f'w0={w0_fit:.2f} μm\nz0={z0_fit:.2f} mm', transform=ax.transAxes, bbox=dict(facecolor='white'))
             plt.tight_layout()
+            
+            
+def RecognizeCommonPhrase(dataPathList, repetition):
+    
+    pattern_both = re.compile(r'(?:(\d+(?:\.\d+)?)\s*mm).*?power\s*(\d+)$', re.IGNORECASE)
+    pattern_distance_only = re.compile(r'(\d+(?:\.\d+)?)\s*mm', re.IGNORECASE)
+
+    conditions = []
+    values = []
+    distances = []
+
+    for name in dataPathList:
+        basename = os.path.basename(name)
+
+        match_both = pattern_both.search(basename)
+        match_dist = pattern_distance_only.search(basename)
+
+        if match_both:
+            distance = float(match_both.group(1))
+            value = int(match_both.group(2))
+            condition = re.sub(pattern_both, '', basename).strip()
+        elif match_dist:
+            distance = float(match_dist.group(1))
+            value = np.nan
+            condition = re.sub(pattern_distance_only, '', basename).strip()
+        else:
+            distance = np.nan
+            value = np.nan
+            condition = basename.strip()
+
+        conditions.extend([condition] * repetition)
+        values.extend([value] * repetition)
+        distances.extend([distance] * repetition)
+    
+    return conditions, values, distances
+
+def multi_gaussian(x, *params):
+    # params = [A1, mu1, sigma1, A2, mu2, sigma2, ...]
+    n = len(params) // 3
+    y = np.zeros_like(x, dtype=float)
+    
+    for i in range(n):
+        A = params[3*i]
+        mu = params[3*i + 1]
+        sigma = params[3*i + 2]
+        y += A * np.exp(-(x - mu)**2 / (2 * sigma**2))
+    
+    return y
+
+
+def GetSlices(ImageArray):
+    max_index = np.unravel_index(np.argmax(ImageArray), ImageArray.shape)
+    max_x, max_y = max_index
+
+    vertSlice = ImageArray[:, max_y]
+    horizSlice = ImageArray[max_x, :]
+    
+    return horizSlice, vertSlice

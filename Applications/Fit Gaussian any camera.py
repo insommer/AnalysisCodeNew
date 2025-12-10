@@ -5,6 +5,7 @@ import pandas as pd
 import re
 from scipy.optimize import curve_fit
 from ImageAnalysis import ImageAnalysisCode
+from LightSheetAnalysis import LSAnalysisCode
 import datetime
 import configparser
 from PIL import Image
@@ -17,7 +18,7 @@ dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
 date = '12/10/2025'
 
-camera = 'Basler'
+# camera = 'Basler'
 powr = 15
 camera = 'Andor'
 data_folder = [
@@ -35,14 +36,15 @@ repetition = 6
 commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
+multiG = True
 
 doPlot = 1
 angle = 0
 
-rowstart=1
-rowend=-1
-columnstart=1
-columnend=-1
+rowstart=720
+rowend=880
+columnstart=175
+columnend=525
 ROI = [rowstart, rowend, columnstart, columnend]
 
 dayFolder = ImageAnalysisCode.GetDataLocation(date, dataRootFolder)
@@ -60,35 +62,7 @@ df = pd.DataFrame(columns=['File', 'Condition', 'Value', 'Xcenter', 'Ycenter', '
 
 if commonPhrase:
 
-    pattern_both = re.compile(r'(?:(\d+(?:\.\d+)?)\s*mm).*?power\s*(\d+)$', re.IGNORECASE)
-    pattern_distance_only = re.compile(r'(\d+(?:\.\d+)?)\s*mm', re.IGNORECASE)
-
-    conditions = []
-    values = []
-    distances = []
-
-    for name in dataPath:
-        basename = os.path.basename(name)
-
-        match_both = pattern_both.search(basename)
-        match_dist = pattern_distance_only.search(basename)
-
-        if match_both:
-            distance = float(match_both.group(1))
-            value = int(match_both.group(2))
-            condition = re.sub(pattern_both, '', basename).strip()
-        elif match_dist:
-            distance = float(match_dist.group(1))
-            value = np.nan
-            condition = re.sub(pattern_distance_only, '', basename).strip()
-        else:
-            distance = np.nan
-            value = np.nan
-            condition = basename.strip()
-
-        conditions.extend([condition] * repetition)
-        values.extend([value] * repetition)
-        distances.extend([distance] * repetition)
+    conditions, values, distances = ImageAnalysisCode.RecognizeCommonPhrase(dataPath, repetition)
 
     df['Condition'] = conditions
     df['Value'] = values
@@ -104,6 +78,8 @@ else:
     metaData = None
     
 images = ImageAnalysisCode.GetImages(fullpath, camera, ROI, metaData)
+images_corrected = LSAnalysisCode.BGsubtraction_alt(images, 10)
+
 
 # empty lists to store fitted parameters
 Xcenters = []; Ycenters = []; Xwidths = []; Ywidths = []; Xamps = []; Yamps = []
@@ -111,7 +87,7 @@ Xcenters = []; Ycenters = []; Xwidths = []; Ywidths = []; Xamps = []; Yamps = []
 for image_arr in images:
     
     image_arr, _ = ImageAnalysisCode.Rotate(image_arr, angle)
-    paramX, paramY = ImageAnalysisCode.FitGaussian(image_arr, doPlot, 'Narrow')
+    paramX, paramY = ImageAnalysisCode.FitGaussian(image_arr, doPlot, 'Wide')
     
     Xcenter = paramX[0]*pixSize
     Xwidth = paramX[1]*pixSize
@@ -142,21 +118,39 @@ else:
 
 #%%
 
-for col in colsForAnalysis:
+# for col in colsForAnalysis:
     
-    plt.figure(figsize=(4,3))
+#     plt.figure(figsize=(4,3))
     
-    # for condition, group in stats.groupby('Value'):
-    #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
-    plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
+#     # for condition, group in stats.groupby('Value'):
+#     #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
+#     plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
     
-    plt.xlabel(quantity)
-    plt.ylabel(col)
-    # plt.legend(title='Power %')
-    plt.tight_layout()
+#     plt.xlabel(quantity)
+#     plt.ylabel(col)
+#     # plt.legend(title='Power %')
+#     plt.tight_layout()
     
 
-ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
+# ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
 
+#%% MultiGaussian option
+from scipy.signal import find_peaks, savgol_filter
+
+if multiG is True:
+    
+    for img in images:    
+        
+        xSlice, ySlice = ImageAnalysisCode.GetSlices(img)
+        
+        xSlice_smooth = savgol_filter(xSlice, window_length=3, polyorder=2)
+        
+        peaks, props = find_peaks(xSlice_smooth,
+                                  prominence=np.max(xSlice_smooth)*0.05,
+                                  width=(1,3),
+                                  distance=5
+                                  )
+        print('Detected peaks: ', len(peaks))
+        print('Locations: ', xSlice_smooth[peaks])
 
 
