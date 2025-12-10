@@ -29,10 +29,10 @@ data_folder = [
 
 bg_folder = fr'{camera}/One LS redo BG'
 
-rowstart=1
-rowend=-1
-columnstart=1
-columnend=-1
+rowstart=780
+rowend=820
+columnstart=200
+columnend=500
 ROI = [rowstart, rowend, columnstart, columnend]
 
 dayFolder = ImageAnalysisCode.GetDayFolder(date, dataRootFolder)
@@ -66,7 +66,7 @@ else:
     
 images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)
 # images_corrected = LSAnalysisCode.BGsubtraction(bgFullPath, images, ROI, metaData)
-images_corrected = LSAnalysisCode.BGsubtraction_alt(images)
+images_corrected = LSAnalysisCode.BGsubtraction_alt(images, 10)
 
 df = LSAnalysisCode.ExtractRawCts(fullPath, images_corrected)
 

@@ -199,9 +199,9 @@ def BGsubtraction(bgFullPath, imagesList, ROI, metaData):
 
 
 
-def BGsubtraction_alt(imagesList):
+def BGsubtraction_alt(imagesList, region_size):
     
-    bgVal = EstimateBGvalue(imagesList[0])
+    bgVal = EstimateBGvalue(imagesList[0], region_size)
     
     corrected_images = []
     for img in imagesList:
