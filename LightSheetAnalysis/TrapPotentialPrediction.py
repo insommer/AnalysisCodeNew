@@ -21,9 +21,18 @@ data_folder = [
     # fr'{camera}/Two LS 10.45 mW 93.6 mA',
     # fr'{camera}/Two LS 18.18 mW 109.7 mA',
     # fr'{camera}/Two LS 28.3 mW 130.5 mA',
-    fr'{camera}/Reflected LS 5.71 mW 93.6 mA',
-    fr'{camera}/Reflected LS 10.5 mW 111.7 mA',
-    fr'{camera}/Reflected LS 15.26 mW 130.8 mA',
+    # fr'{camera}/Reflected LS 5.71 mW 93.6 mA',
+    # fr'{camera}/Reflected LS 10.5 mW 111.7 mA',
+    # fr'{camera}/Reflected LS 15.26 mW 130.8 mA',
+    # fr'{camera}/New NPBS cube Transmitted 1.98 mW 88.9 mA',
+    # fr'{camera}/New NPBS cube Transmitted 4.26 mW 108.8 mA',
+    # fr'{camera}/New NPBS cube Transmitted 6.53 mW 129.6 mA',
+    # fr'{camera}/New NPBS cube Transmitted 8.32 mW 147.8 mA',
+    fr'{camera}/New NPBS cube Reflected 2.13 mW 88.9 mA',
+    fr'{camera}/New NPBS cube Reflected 4.72 mW 108.8 mA',
+    fr'{camera}/New NPBS cube Reflected 6.91 mW 129.6 mA',
+    fr'{camera}/New NPBS cube Reflected 8.94 mW 147.8 mA',
+
 
     ]
 
