@@ -23,9 +23,11 @@ camera = 'Andor'
 data_folder = [
 
     # fr'{camera}/One LS redo 1.06 mW 77.2 mA',
-    fr'{camera}/One LS redo 4.75 mW 90.7 mA',
+    # fr'{camera}/One LS redo 4.75 mW 90.7 mA',
     # fr'{camera}/One LS redo 8.4 mW 105.1 mA',
-    fr'{camera}/One LS redo 12.64 mW 122.7 mA',
+    # fr'{camera}/One LS redo 12.64 mW 122.7 mA',
+    fr'{camera}/One LS final 19.1 mW 150 mA',
+
 
     ]
 

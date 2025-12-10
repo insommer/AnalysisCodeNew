@@ -7,8 +7,8 @@ from LightSheetAnalysis import LSAnalysisCode
 
 plt.close('all')
 
-# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
+dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+# dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
 
 date = '12/9/2025'
 # date = '1/31/2025'
@@ -16,21 +16,21 @@ date = '12/9/2025'
 camera = 'Andor'
 
 data_folder = [
-    fr'{camera}/One LS redo 7.41 mW 101.2 mA',
-    fr'{camera}/One LS redo 12.79 mW 122.7 mA',
-    fr'{camera}/One LS redo 19 mW 150.9 mA',
-    # fr'{camera}/AM 5.32 mW 99.92 mA',
-    # fr'{camera}/AM 8.36 mW 105.5 mA',
-    # fr'{camera}/AM 11.75 mW 111.53 mA',
-    # fr'{camera}/AM 14.5 mW 116.87 mA',
+    # fr'{camera}/One LS final 4.7 mW 90.2 mA',
+    # fr'{camera}/One LS final 9.7 mW 110 mA',
+    # fr'{camera}/One LS final 14.4 mW 130 mA',
+    # fr'{camera}/One LS final 19.1 mW 150 mA',
+    fr'{camera}/One LS reflected at cube 4.97 mW 90.2 mA',
+    fr'{camera}/One LS reflected at cube 10.2 mW 110 mA',
+    fr'{camera}/One LS reflected at cube 15.5 mW 130 mA',
+    fr'{camera}/One LS reflected at cube 20.5 mW 150 mA',
+
 
     
     ]
 
-bg_folder = fr'{camera}/One LS redo BG'
-
-rowstart=780
-rowend=820
+rowstart=720
+rowend=780
 columnstart=200
 columnend=500
 ROI = [rowstart, rowend, columnstart, columnend]
@@ -38,9 +38,6 @@ ROI = [rowstart, rowend, columnstart, columnend]
 dayFolder = ImageAnalysisCode.GetDayFolder(date, dataRootFolder)
 dataPath = [ os.path.join(dayFolder, j) for j in data_folder]
 fullPath = ImageAnalysisCode.GetFullFilePaths(dataPath)
-
-bgPath = os.path.join(dayFolder, bg_folder)
-bgFullPath = ImageAnalysisCode.GetFullFilePaths([bgPath])
 
 if camera == 'FLIR':
     pixSize_um = 3.75
@@ -65,7 +62,6 @@ else:
     metaData = None
     
 images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)
-# images_corrected = LSAnalysisCode.BGsubtraction(bgFullPath, images, ROI, metaData)
 images_corrected = LSAnalysisCode.BGsubtraction_alt(images, 10)
 
 df = LSAnalysisCode.ExtractRawCts(fullPath, images_corrected)
@@ -88,4 +84,4 @@ df = LSAnalysisCode.GetMaxIntensity(images_corrected, df, pixArea_m, factor)
 stats['Max Intensity (W/m2)'] = df.groupby(colsForGrouping)['Max Intensity (W/m2)'].mean().reset_index()['Max Intensity (W/m2)']
 
 # calculate dipole potential, fit vs. laser current
-Udip, Temp_uK = LSAnalysisCode.GetDipolePotential(stats)
+Udip, Temp_uK = LSAnalysisCode.GetDipolePotential(stats, maxCurrent_mA=270)

@@ -93,7 +93,7 @@ def GetDipolePotential(stats, maxCurrent_mA = 325, doPlot=True):
     popt, _ = curve_fit(lin, stats['Current (mA)'], stats['Max Intensity (W/m2)'])
     
     # plot max intensity vs. controller current
-    curr_fit = np.linspace(min(stats['Current (mA)']), 325, 100)
+    curr_fit = np.linspace(min(stats['Current (mA)']), maxCurrent_mA, 100)
     maxI_fit = lin(curr_fit, *popt)
         
     # calculate dipole potential from max intensity
