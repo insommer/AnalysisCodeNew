@@ -17,7 +17,8 @@ def multi_gaussian(x, *params):
     
     return y
 
-def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, sigma_guess=0.05, doPlot=True):
+def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, peak_prominence=0.05, sigma_guess=0.05, 
+                  window_length=7, polyorder=2, doPlot=True):
 
     # assumes XatomNumber for analysis
     if isinstance(dataFrame, pd.DataFrame):
@@ -34,7 +35,7 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, sigma_guess=0.05, doPlot=True):
 
     peaks, props = find_peaks(
         ResponseSmoothed,
-        prominence=np.max(ResponseSmoothed)*0.05,   # 5% prominence
+        prominence=np.max(ResponseSmoothed)*peak_prominence,   # 5% prominence
         width=(1, 10),                              # flexible gaussian widths
         distance=int(peak_sep_MHz / freq_step)      # adjustable peak separation
     )
@@ -89,6 +90,13 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, sigma_guess=0.05, doPlot=True):
         plt.plot(Freq, ResponseSmoothed, '-', alpha=0.8, label='Smoothed')
         plt.plot(FreqFit, multi_gaussian(FreqFit, *popt), 'r-', linewidth=2, label='Fit')
         plt.plot(Freq[peaks], Response[peaks], 'gx', markersize=12, label='Detected peaks')
+    
+        # horizontal error bars for fitted Gaussian centers
+        fit_heights = multi_gaussian(np.array(centers), *popt)
+        plt.errorbar(centers, fit_heights, xerr=center_err,
+            fmt='none', ecolor='r',
+            elinewidth=1.5, capsize=4,
+        )
     
         plt.legend()
         plt.xlabel('RF_FRQ_MHz')
