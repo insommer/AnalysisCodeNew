@@ -27,7 +27,7 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, sigma_guess=0.05, doPlot=True):
     Freq = df['RF_FRQ_MHz'].values
     Response = df['XatomNumber'].interpolate().values # in case there are nan values
 
-    ResponseSmoothed = savgol_filter(Response, window_length=7, polyorder=2)
+    ResponseSmoothed = savgol_filter(Response, window_length=4, polyorder=2)
 
     # Peak detection
     freq_step = np.mean(np.diff(Freq))
