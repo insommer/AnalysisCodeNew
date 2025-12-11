@@ -52,8 +52,18 @@ results = pd.concat(dfs, ignore_index=True)
 
 plt.rcParams['font.size'] = 14
 
+<<<<<<< HEAD
 peak_sep_MHz = 0.1
 sigma_guess = 0.5
 
+=======
+peak_sep_MHz = 0.15
+peak_prominence = 0.05
+sigma_guess = 0.05
+window_length = 7
+polyorder=2
+>>>>>>> 601162a00c8cb7dff91886c6005b4d8fdac8210f
 
-stats = SpectrumAnalysisCode.FitRFspectrum(results, peak_sep_MHz, sigma_guess)
+stats = SpectrumAnalysisCode.FitRFspectrum(results, peak_sep_MHz, peak_prominence, sigma_guess,
+                                           window_length, polyorder
+                                           )

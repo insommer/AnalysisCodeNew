@@ -10,27 +10,34 @@ plt.close('all')
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
 
-date = '12/9/2025'
-# date = '1/31/2025'
+date = '12/10/2025'
 
 camera = 'Andor'
 
 data_folder = [
-    # fr'{camera}/One LS final 4.7 mW 90.2 mA',
-    # fr'{camera}/One LS final 9.7 mW 110 mA',
-    # fr'{camera}/One LS final 14.4 mW 130 mA',
-    # fr'{camera}/One LS final 19.1 mW 150 mA',
-    fr'{camera}/One LS reflected at cube 4.97 mW 90.2 mA',
-    fr'{camera}/One LS reflected at cube 10.2 mW 110 mA',
-    fr'{camera}/One LS reflected at cube 15.5 mW 130 mA',
-    fr'{camera}/One LS reflected at cube 20.5 mW 150 mA',
+    # fr'{camera}/Focused LS 4.1 mW 89.5 mA',
+    # fr'{camera}/Focused LS 8.8 mW 109.6 mA',
+    # fr'{camera}/Focused LS 13.45 mW 130.5 mA',
+    # fr'{camera}/Two LS 10.45 mW 93.6 mA',
+    # fr'{camera}/Two LS 18.18 mW 109.7 mA',
+    # fr'{camera}/Two LS 28.3 mW 130.5 mA',
+    # fr'{camera}/Reflected LS 5.71 mW 93.6 mA',
+    # fr'{camera}/Reflected LS 10.5 mW 111.7 mA',
+    # fr'{camera}/Reflected LS 15.26 mW 130.8 mA',
+    # fr'{camera}/New NPBS cube Transmitted 1.98 mW 88.9 mA',
+    # fr'{camera}/New NPBS cube Transmitted 4.26 mW 108.8 mA',
+    # fr'{camera}/New NPBS cube Transmitted 6.53 mW 129.6 mA',
+    # fr'{camera}/New NPBS cube Transmitted 8.32 mW 147.8 mA',
+    fr'{camera}/New NPBS cube Reflected 2.13 mW 88.9 mA',
+    fr'{camera}/New NPBS cube Reflected 4.72 mW 108.8 mA',
+    fr'{camera}/New NPBS cube Reflected 6.91 mW 129.6 mA',
+    fr'{camera}/New NPBS cube Reflected 8.94 mW 147.8 mA',
 
 
-    
     ]
 
 rowstart=720
-rowend=780
+rowend=840
 columnstart=200
 columnend=500
 ROI = [rowstart, rowend, columnstart, columnend]
