@@ -16,18 +16,35 @@ plt.close('all')
 
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '12/10/2025'
+date = '12/12/2025'
 
-# camera = 'Basler'
-powr = 15
-camera = 'Andor'
+camera = 'Basler'
+powr = 70
+# camera = 'Andor'
 data_folder = [
     # fr'{camera}/Focus LS 3.302 mm',
     # fr'{camera}/Focus LS 3.556 mm',
     # fr'{camera}/Focus LS 3.81 mm',
     # fr'{camera}/Focus LS 4.064 mm',
-    fr'{camera}/Measure separation'
+    fr'{camera}/Telescope f1+f2 95 mm power 50',
+    fr'{camera}/Telescope f1+f2 214 mm power 50',
+    fr'{camera}/Telescope f1+f2 331 mm power 50',
+    fr'{camera}/Telescope f1+f2 416 mm power 50',
+    
+    fr'{camera}/Telescope f1+f2 95 mm power 70',
+    fr'{camera}/Telescope f1+f2 214 mm power 70',
+    fr'{camera}/Telescope f1+f2 331 mm power 70',
+    fr'{camera}/Telescope f1+f2 416 mm power 70',
+    
+    fr'{camera}/Telescope f1+f2 95 mm power 15',
+    fr'{camera}/Telescope f1+f2 214 mm power 15',
+    fr'{camera}/Telescope f1+f2 331 mm power 15',
+    fr'{camera}/Telescope f1+f2 416 mm power 15',
 
+    fr'{camera}/Telescope f1+f2 95 mm power 30',
+    fr'{camera}/Telescope f1+f2 214 mm power 30',
+    fr'{camera}/Telescope f1+f2 331 mm power 30',
+    fr'{camera}/Telescope f1+f2 416 mm power 30',
 
 
     ]
@@ -38,13 +55,17 @@ quantity = 'Distance (mm)'
 var2plot = 'Distance'
 multiG = True
 
-doPlot = 1
+doPlot = 0
 angle = 0
 
-rowstart=720
-rowend=880
-columnstart=175
-columnend=525
+# rowstart=720
+# rowend=880
+# columnstart=175
+# columnend=525
+rowstart=1
+rowend=-1
+columnstart=1
+columnend=-1
 ROI = [rowstart, rowend, columnstart, columnend]
 
 dayFolder = ImageAnalysisCode.GetDataLocation(date, dataRootFolder)
@@ -118,39 +139,38 @@ else:
 
 #%%
 
-# for col in colsForAnalysis:
+if stats['Value'].nunique() == 1:
     
-#     plt.figure(figsize=(4,3))
-    
-#     # for condition, group in stats.groupby('Value'):
-#     #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
-#     plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
-    
-#     plt.xlabel(quantity)
-#     plt.ylabel(col)
-#     # plt.legend(title='Power %')
-#     plt.tight_layout()
-    
-
-# ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
-
-#%% MultiGaussian option
-from scipy.signal import find_peaks, savgol_filter
-
-if multiG is True:
-    
-    for img in images:    
+    for col in colsForAnalysis:
         
-        xSlice, ySlice = ImageAnalysisCode.GetSlices(img)
+        plt.figure(figsize=(4,3))
         
-        xSlice_smooth = savgol_filter(xSlice, window_length=3, polyorder=2)
+        # for condition, group in stats.groupby('Value'):
+        #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
+        plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
         
-        peaks, props = find_peaks(xSlice_smooth,
-                                  prominence=np.max(xSlice_smooth)*0.05,
-                                  width=(1,3),
-                                  distance=5
-                                  )
-        print('Detected peaks: ', len(peaks))
-        print('Locations: ', xSlice_smooth[peaks])
+        plt.xlabel(quantity)
+        plt.ylabel(col)
+        # plt.legend(title='Power %')
+        plt.tight_layout()
+        
+    
+    ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
+
+else:
+    scanVar1 = 'Distance'
+    scanVar2 = 'Value'
+    
+    for col in colsForAnalysis:
+        fig,ax = plt.subplots(figsize=(4,3))
+    
+        for val2, group in stats.groupby(scanVar2):
+            ax.errorbar(group[scanVar1], group[col+'_mean'], yerr=group[col+'_std'],
+                        marker='o', label=f'{scanVar2}={val2:.2f}', capsize=3)
+    
+        ax.set_xlabel(scanVar1+' (mm)')
+        ax.set_ylabel(col+' (um)')
+        ax.legend()
+        plt.tight_layout()
 
 
