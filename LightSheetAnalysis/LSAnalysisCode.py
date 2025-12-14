@@ -6,6 +6,8 @@ import os
 import pandas as pd
 import re
 from ImageAnalysis import ImageAnalysisCode
+from scipy.special import erf
+
 
 
 c = s.c # speed of light [meter/sec]
@@ -210,7 +212,31 @@ def BGsubtraction_alt(imagesList, region_size):
         corrected_images.append(corrected)
     return corrected_images
     
+#############################
+# Light sheet fitting functions
+
+# convolution between step fxn and Gaussian PSF
+def GaussianIntegral(x,Mu,Width,Amp):
         
+    R = np.sqrt(2) / Width
+    
+    func = Amp * np.sqrt(np.pi) / (2*R) * ( erf(R*(x+1-Mu)) - erf(R*(x-Mu)) )
+    
+    return func
 
-
-
+# integral of convolution between step fxn and Gaussian PSF
+    # A,B - start and end locations of the peak
+    # Width parameter gives the resolution
+def GaussianConvIntegral(x, A, B, Width, Amp):
+    
+    R = np.sqrt(2) / Width
+    
+    func = A * np.sqrt(np.pi)/(2*R) * (
+        (x+1-A)*erf(R*(x+1-A)) - (x+1-B)*erf(R*(x+1-B)) - (x-A)*erf(R*(x-A)) + 
+        (x-B)*erf(R*(x-B)) + 1/(R*np.sqrt(np.pi)) * (
+            np.exp(-(R*(x+1-A))**2) + np.exp(-(R*(x-B))**2) - np.exp(-(R*(x-A))**2) - 
+            np.exp(-(R*(x+1-B))**2)
+            ) 
+        )
+    
+    return func
