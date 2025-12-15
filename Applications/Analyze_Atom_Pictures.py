@@ -9,7 +9,11 @@ import os
 ####################################
 #Set the date and the folder name
 #################################### 1.0 = 85.5A , 0.9 = 77.4A , 0.8 = 69.5A , 0.7 = 61.6A 
+<<<<<<< HEAD
 dataRootFolder = r"C:\My Programs\Sommer lab data analysis\Data"
+=======
+dataRootFolder = r"C:\Users\insommer\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
 # dataRootFolder = r'F:\Data'
 
 date = '12/03/2025'
@@ -25,10 +29,17 @@ data_folder = [
     # 'D1_RFscan_noRamp_ScanVert_1.33_1.53A_ZS0.38A_Cam0.15A'
     # 'D1_thermo_noRamp_Delta_1_29MHz_scanRaman',
     # 'D1_thermo_noRamp_Delta_1_27MHz_Raman0.15',
+<<<<<<< HEAD
     'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
     'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
     'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
     'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
+=======
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
 
 
 ]
@@ -152,15 +163,15 @@ for cam in cameras:
     
 # %% Filter zyla df if there are bad fits
 
-col1 = 'XatomNumber'
-# col2 = 'XatomNumber'
-thresh = 1e8
+# col1 = 'XatomNumber'
+# # col2 = 'XatomNumber'
+# thresh = 0
 
-if (results['zyla'][col1] > thresh).any(): #or (results['zyla'][col2] > thresh).any():
+# if (results['zyla'][col1] < thresh).any(): #or (results['zyla'][col2] > thresh).any():
 
-    results['zyla'] = ImageAnalysisCode.FilterDataframe(results['zyla'], col1, thresh)
+#     results['zyla'] = ImageAnalysisCode.FilterDataframe(results['zyla'], col1, thresh)
     
-
+results['zyla']['XatomNumber'] = np.clip(results['zyla']['XatomNumber'], a_min=0, a_max=1e7)
 
 # %%
 
@@ -304,25 +315,34 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 # var2 = 'D1_Re_FRQ'
 # var1 = 'RamanDelta_MHz'
 # var2 = 'Delta1_MHz'
+<<<<<<< HEAD
 # var2 = 'D1Time_ms'
+=======
+# # var2 = 'D1Time_ms'
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
 
-# var1 = 'D1RampTime_ms'
-# var2 = 'D1Time_ms'
+# # var1 = 'D1RampTime_ms'
+# # var2 = 'D1Time_ms'
 
-# # # # # var2 = 'D1RampTime_ms'
-# # # # # var1 = 'D1TotalTime_ms'
-
-# # # # # # var1 = 'D1CoolingPowerRamp_mW'
 # # # # # # var2 = 'D1RampTime_ms'
+# # # # # # var1 = 'D1TotalTime_ms'
 
-# # # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
-# # # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
-# # var1 = 'VerticalBiasCurrent'
-# var1 = 'CamBiasCurrent'
-# var2 = 'ZSBiasCurrent'
+# # # # # # # var1 = 'D1CoolingPowerRamp_mW'
+# # # # # # # var2 = 'D1RampTime_ms'
+
+<<<<<<< HEAD
+# fitYVar = 'Ywidth'
+
+=======
+# # # # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
+# # # # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
+# # # var1 = 'VerticalBiasCurrent'
+# # var1 = 'CamBiasCurrent'
+# # var2 = 'ZSBiasCurrent'
 
 # fitYVar = 'Ywidth'
 
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
 # df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
 #                                             #fltedData,
 #                                             var1, 

@@ -5,6 +5,7 @@ import pandas as pd
 import re
 from scipy.optimize import curve_fit
 from ImageAnalysis import ImageAnalysisCode
+from LightSheetAnalysis import LSAnalysisCode
 import datetime
 import configparser
 from PIL import Image
@@ -13,22 +14,38 @@ import cv2
 
 plt.close('all')
 
-# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '12/1/2025'
+dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+# dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
+date = '12/12/2025'
 
 camera = 'Basler'
-powr = 15
+powr = 70
 # camera = 'Andor'
 data_folder = [
+    # fr'{camera}/Focus LS 3.302 mm',
+    # fr'{camera}/Focus LS 3.556 mm',
+    # fr'{camera}/Focus LS 3.81 mm',
+    # fr'{camera}/Focus LS 4.064 mm',
+    fr'{camera}/Telescope f1+f2 95 mm power 50',
+    fr'{camera}/Telescope f1+f2 214 mm power 50',
+    fr'{camera}/Telescope f1+f2 331 mm power 50',
+    fr'{camera}/Telescope f1+f2 416 mm power 50',
+    
+    fr'{camera}/Telescope f1+f2 95 mm power 70',
+    fr'{camera}/Telescope f1+f2 214 mm power 70',
+    fr'{camera}/Telescope f1+f2 331 mm power 70',
+    fr'{camera}/Telescope f1+f2 416 mm power 70',
+    
+    fr'{camera}/Telescope f1+f2 95 mm power 15',
+    fr'{camera}/Telescope f1+f2 214 mm power 15',
+    fr'{camera}/Telescope f1+f2 331 mm power 15',
+    fr'{camera}/Telescope f1+f2 416 mm power 15',
 
-    fr'{camera}/SPX023AR.1 110 mm power {powr}',
-    fr'{camera}/SPX023AR.1 113 mm power {powr}',
-    fr'{camera}/SPX023AR.1 117 mm power {powr}',
-    fr'{camera}/SPX023AR.1 121 mm power {powr}',
-    fr'{camera}/SPX023AR.1 124 mm power {powr}',
-    fr'{camera}/SPX023AR.1 128 mm power {powr}',
-    fr'{camera}/SPX023AR.1 132 mm power {powr}',
+    fr'{camera}/Telescope f1+f2 95 mm power 30',
+    fr'{camera}/Telescope f1+f2 214 mm power 30',
+    fr'{camera}/Telescope f1+f2 331 mm power 30',
+    fr'{camera}/Telescope f1+f2 416 mm power 30',
+
 
     ]
 
@@ -36,10 +53,15 @@ repetition = 6
 commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
+multiG = True
 
 doPlot = 0
 angle = 0
 
+# rowstart=720
+# rowend=880
+# columnstart=175
+# columnend=525
 rowstart=1
 rowend=-1
 columnstart=1
@@ -61,35 +83,7 @@ df = pd.DataFrame(columns=['File', 'Condition', 'Value', 'Xcenter', 'Ycenter', '
 
 if commonPhrase:
 
-    pattern_both = re.compile(r'(?:(\d+(?:\.\d+)?)\s*mm).*?power\s*(\d+)$', re.IGNORECASE)
-    pattern_distance_only = re.compile(r'(\d+(?:\.\d+)?)\s*mm', re.IGNORECASE)
-
-    conditions = []
-    values = []
-    distances = []
-
-    for name in dataPath:
-        basename = os.path.basename(name)
-
-        match_both = pattern_both.search(basename)
-        match_dist = pattern_distance_only.search(basename)
-
-        if match_both:
-            distance = float(match_both.group(1))
-            value = int(match_both.group(2))
-            condition = re.sub(pattern_both, '', basename).strip()
-        elif match_dist:
-            distance = float(match_dist.group(1))
-            value = np.nan
-            condition = re.sub(pattern_distance_only, '', basename).strip()
-        else:
-            distance = np.nan
-            value = np.nan
-            condition = basename.strip()
-
-        conditions.extend([condition] * repetition)
-        values.extend([value] * repetition)
-        distances.extend([distance] * repetition)
+    conditions, values, distances = ImageAnalysisCode.RecognizeCommonPhrase(dataPath, repetition)
 
     df['Condition'] = conditions
     df['Value'] = values
@@ -105,6 +99,8 @@ else:
     metaData = None
     
 images = ImageAnalysisCode.GetImages(fullpath, camera, ROI, metaData)
+images_corrected = LSAnalysisCode.BGsubtraction_alt(images, 10)
+
 
 # empty lists to store fitted parameters
 Xcenters = []; Ycenters = []; Xwidths = []; Ywidths = []; Xamps = []; Yamps = []
@@ -112,7 +108,7 @@ Xcenters = []; Ycenters = []; Xwidths = []; Ywidths = []; Xamps = []; Yamps = []
 for image_arr in images:
     
     image_arr, _ = ImageAnalysisCode.Rotate(image_arr, angle)
-    paramX, paramY = ImageAnalysisCode.FitGaussian(image_arr, doPlot, 'wide')
+    paramX, paramY = ImageAnalysisCode.FitGaussian(image_arr, doPlot, 'Wide')
     
     Xcenter = paramX[0]*pixSize
     Xwidth = paramX[1]*pixSize
@@ -143,21 +139,38 @@ else:
 
 #%%
 
-for col in colsForAnalysis:
+if stats['Value'].nunique() == 1:
     
-    plt.figure(figsize=(4,3))
+    for col in colsForAnalysis:
+        
+        plt.figure(figsize=(4,3))
+        
+        # for condition, group in stats.groupby('Value'):
+        #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
+        plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
+        
+        plt.xlabel(quantity)
+        plt.ylabel(col)
+        # plt.legend(title='Power %')
+        plt.tight_layout()
+        
     
-    # for condition, group in stats.groupby('Value'):
-    #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
-    plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
-    
-    plt.xlabel(quantity)
-    plt.ylabel(col)
-    # plt.legend(title='Power %')
-    plt.tight_layout()
-    
+    ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
 
-ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
-
+else:
+    scanVar1 = 'Distance'
+    scanVar2 = 'Value'
+    
+    for col in colsForAnalysis:
+        fig,ax = plt.subplots(figsize=(4,3))
+    
+        for val2, group in stats.groupby(scanVar2):
+            ax.errorbar(group[scanVar1], group[col+'_mean'], yerr=group[col+'_std'],
+                        marker='o', label=f'{scanVar2}={val2:.2f}', capsize=3)
+    
+        ax.set_xlabel(scanVar1+' (mm)')
+        ax.set_ylabel(col+' (um)')
+        ax.legend()
+        plt.tight_layout()
 
 

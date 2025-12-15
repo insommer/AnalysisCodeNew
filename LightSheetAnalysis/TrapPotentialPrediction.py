@@ -7,31 +7,39 @@ from LightSheetAnalysis import LSAnalysisCode
 
 plt.close('all')
 
-# dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
+dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+# dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
 
-date = '12/9/2025'
-# date = '1/31/2025'
+date = '12/10/2025'
 
 camera = 'Andor'
 
 data_folder = [
-    fr'{camera}/One LS 0.75 mW 75.7 mA',
-    fr'{camera}/One LS 2.1 mW 81.6 mA',
-    fr'{camera}/One LS 3.3 mW 87 mA',
-    fr'{camera}/One LS 4.65 mW 93 mA',
-    # fr'{camera}/AM 5.32 mW 99.92 mA',
-    # fr'{camera}/AM 8.36 mW 105.5 mA',
-    # fr'{camera}/AM 11.75 mW 111.53 mA',
-    # fr'{camera}/AM 14.5 mW 116.87 mA',
+    # fr'{camera}/Focused LS 4.1 mW 89.5 mA',
+    # fr'{camera}/Focused LS 8.8 mW 109.6 mA',
+    # fr'{camera}/Focused LS 13.45 mW 130.5 mA',
+    # fr'{camera}/Two LS 10.45 mW 93.6 mA',
+    # fr'{camera}/Two LS 18.18 mW 109.7 mA',
+    # fr'{camera}/Two LS 28.3 mW 130.5 mA',
+    # fr'{camera}/Reflected LS 5.71 mW 93.6 mA',
+    # fr'{camera}/Reflected LS 10.5 mW 111.7 mA',
+    # fr'{camera}/Reflected LS 15.26 mW 130.8 mA',
+    # fr'{camera}/New NPBS cube Transmitted 1.98 mW 88.9 mA',
+    # fr'{camera}/New NPBS cube Transmitted 4.26 mW 108.8 mA',
+    # fr'{camera}/New NPBS cube Transmitted 6.53 mW 129.6 mA',
+    # fr'{camera}/New NPBS cube Transmitted 8.32 mW 147.8 mA',
+    fr'{camera}/New NPBS cube Reflected 2.13 mW 88.9 mA',
+    fr'{camera}/New NPBS cube Reflected 4.72 mW 108.8 mA',
+    fr'{camera}/New NPBS cube Reflected 6.91 mW 129.6 mA',
+    fr'{camera}/New NPBS cube Reflected 8.94 mW 147.8 mA',
 
-    
+
     ]
 
-rowstart=1
-rowend=-1
-columnstart=1
-columnend=-1
+rowstart=720
+rowend=840
+columnstart=200
+columnend=500
 ROI = [rowstart, rowend, columnstart, columnend]
 
 dayFolder = ImageAnalysisCode.GetDayFolder(date, dataRootFolder)
@@ -60,10 +68,10 @@ if camera == 'Andor':
 else:
     metaData = None
     
-images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)   
+images = LSAnalysisCode.ExtractImages(fullPath, ROI, metaData)
+images_corrected = LSAnalysisCode.BGsubtraction_alt(images, 10)
 
-df = LSAnalysisCode.ExtractRawCts(fullPath, images)
-
+df = LSAnalysisCode.ExtractRawCts(fullPath, images_corrected)
 
 colsForGrouping = ['Power (W)', 'Current (mA)']
 colsForAnalysis = ['TotalCts', 'MaxCts']
@@ -76,10 +84,11 @@ stats.columns = colsForGrouping + ['_'.join(col).strip() for col in stats.column
 
 # fit cts vs. power, get conversion factor
 factor = LSAnalysisCode.TotalCts2power(stats)
+# factor = LSAnalysisCode.MaxCts2power(stats)
 
 # calculate intensity from the image
-df = LSAnalysisCode.GetMaxIntensity(images, df, pixArea_m, factor)
+df = LSAnalysisCode.GetMaxIntensity(images_corrected, df, pixArea_m, factor)
 stats['Max Intensity (W/m2)'] = df.groupby(colsForGrouping)['Max Intensity (W/m2)'].mean().reset_index()['Max Intensity (W/m2)']
 
 # calculate dipole potential, fit vs. laser current
-Udip, Temp_uK = LSAnalysisCode.GetDipolePotential(stats)
+Udip, Temp_uK = LSAnalysisCode.GetDipolePotential(stats, maxCurrent_mA=270)

@@ -21,7 +21,7 @@ from skimage.filters import threshold_otsu
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage import center_of_mass
 from scipy import constants
-
+import re
 import os
 import PIL
 import datetime
@@ -3665,11 +3665,13 @@ def FitGaussian(gaussImageFile, graph=True, graphOption='Wide'):
     
     guessX = [max_y, sigGuess, np.max(horiz), offset]
     paramX,_ = curve_fit(Gauss1D, x_index, horiz, p0=guessX)
+    paramX[1] = np.abs(paramX[1]) # ensure positive width
     x_fit1 = np.linspace(0, Nx-1, 5000)
     y_fit1 = Gauss1D(x_fit1, paramX[0], paramX[1], paramX[2], paramX[3])
 
     guessY = [max_x, sigGuess, np.max(vert), offset]
     paramY,_ = curve_fit(Gauss1D, y_index, vert, p0=guessY)
+    paramY[1] = np.abs(paramY[1])
     x_fit2 = np.linspace(0,Ny-1, 5000)
     y_fit2 = Gauss1D(x_fit2, paramY[0], paramY[1], paramY[2], paramY[3])
     
@@ -3739,3 +3741,61 @@ def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
             ax.set_ylabel(col+' (μm)')
             ax.text(0.3, 0.85, f'w0={w0_fit:.2f} μm\nz0={z0_fit:.2f} mm', transform=ax.transAxes, bbox=dict(facecolor='white'))
             plt.tight_layout()
+            
+            
+def RecognizeCommonPhrase(dataPathList, repetition):
+    
+    pattern_both = re.compile(r'(?:(\d+(?:\.\d+)?)\s*mm).*?power\s*(\d+)$', re.IGNORECASE)
+    pattern_distance_only = re.compile(r'(\d+(?:\.\d+)?)\s*mm', re.IGNORECASE)
+
+    conditions = []
+    values = []
+    distances = []
+
+    for name in dataPathList:
+        basename = os.path.basename(name)
+
+        match_both = pattern_both.search(basename)
+        match_dist = pattern_distance_only.search(basename)
+
+        if match_both:
+            distance = float(match_both.group(1))
+            value = int(match_both.group(2))
+            condition = re.sub(pattern_both, '', basename).strip()
+        elif match_dist:
+            distance = float(match_dist.group(1))
+            value = np.nan
+            condition = re.sub(pattern_distance_only, '', basename).strip()
+        else:
+            distance = np.nan
+            value = np.nan
+            condition = basename.strip()
+
+        conditions.extend([condition] * repetition)
+        values.extend([value] * repetition)
+        distances.extend([distance] * repetition)
+    
+    return conditions, values, distances
+
+def multi_gaussian(x, *params):
+    # params = [A1, mu1, sigma1, A2, mu2, sigma2, ...]
+    n = len(params) // 3
+    y = np.zeros_like(x, dtype=float)
+    
+    for i in range(n):
+        A = params[3*i]
+        mu = params[3*i + 1]
+        sigma = params[3*i + 2]
+        y += A * np.exp(-(x - mu)**2 / (2 * sigma**2))
+    
+    return y
+
+
+def GetSlices(ImageArray):
+    max_index = np.unravel_index(np.argmax(ImageArray), ImageArray.shape)
+    max_x, max_y = max_index
+
+    vertSlice = ImageArray[:, max_y]
+    horizSlice = ImageArray[max_x, :]
+    
+    return horizSlice, vertSlice
