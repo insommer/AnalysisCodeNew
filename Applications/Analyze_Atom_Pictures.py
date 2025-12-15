@@ -1,18 +1,18 @@
 from ImageAnalysis import ImageAnalysisCode
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.ndimage import rotate
+# import matplotlib.pyplot as plt
+# from scipy.ndimage import rotate
 import pandas as pd
 import os
-from scipy import constants
+# from scipy import constants
 
 ####################################
 #Set the date and the folder name
 #################################### 1.0 = 85.5A , 0.9 = 77.4A , 0.8 = 69.5A , 0.7 = 61.6A 
-dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
+dataRootFolder = r"C:\My Programs\Sommer lab data analysis\Data"
 # dataRootFolder = r'F:\Data'
 
-date = '12/08/2025'
+date = '12/03/2025'
 
 data_folder = [
     # 'MOT atoms vs LF attn TOF 0.2 ms_1',
@@ -24,7 +24,11 @@ data_folder = [
     # 'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A'
     # 'D1_RFscan_noRamp_ScanVert_1.33_1.53A_ZS0.38A_Cam0.15A'
     # 'D1_thermo_noRamp_Delta_1_29MHz_scanRaman',
-    'D1_thermo_noRamp_Delta_1_27MHz_Raman0.15',
+    # 'D1_thermo_noRamp_Delta_1_27MHz_Raman0.15',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
 
 
 ]
@@ -266,27 +270,27 @@ for cam in cameras:
 # scanVar1 = 'D1Time_ms'
 # # scanVar2 = 'D1PowerRatio'
 
-# scanVar1 = 'RF_FRQ_MHz'
+scanVar1 = 'RF_FRQ_MHz'
 # # # scanVar2 = 'RF_AntennaPower'
 # scanVar2 = 'VerticalBiasCurrent'
-# # scanVar2 = 'ZSBiasCurrent'
+scanVar2 = 'ZSBiasCurrent'
 # # scanVar2 = 'CamBiasCurrent'
 
 
-# dependentVar = 'XatomNumber'
-# ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
+dependentVar = 'XatomNumber'
+ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
 
 # %%
 
-# scanVar1 = 'RF_FRQ_MHz'
+scanVar1 = 'RF_FRQ_MHz'
 # # scanVar2 = 'RF_AntennaPower'
 # # scanVar2 = 'VerticalBiasCurrent'
-# # scanVar2 = 'ZSBiasCurrent'
+scanVar2 = 'ZSBiasCurrent'
 # scanVar2 = 'CamBiasCurrent'
 
 
-# dependentVar = 'XatomNumber'
-# ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
+dependentVar = 'YatomNumber'
+ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
 
 
 # %% THERMOMETRY
@@ -298,8 +302,8 @@ for cam in cameras:
 
 # var1 = 'D1_Cooling_FRQ'
 # var2 = 'D1_Re_FRQ'
-var1 = 'RamanDelta_MHz'
-var2 = 'Delta1_MHz'
+# var1 = 'RamanDelta_MHz'
+# var2 = 'Delta1_MHz'
 # var2 = 'D1Time_ms'
 
 # var1 = 'D1RampTime_ms'
@@ -317,25 +321,25 @@ var2 = 'Delta1_MHz'
 # var1 = 'CamBiasCurrent'
 # var2 = 'ZSBiasCurrent'
 
-fitYVar = 'Ywidth'
+# fitYVar = 'Ywidth'
 
-df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
-                                            #fltedData,
-                                            var1, 
-                                            var2, 
-                                            fitXVar='TOF',
-                                            fitYVar=fitYVar,
-                                            do_plot=1, add_Text=1)
-
-
-df1 = df1.reset_index()
+# df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
+#                                             #fltedData,
+#                                             var1, 
+#                                             var2, 
+#                                             fitXVar='TOF',
+#                                             fitYVar=fitYVar,
+#                                             do_plot=1, add_Text=1)
 
 
-plt.figure(figsize=(5,4))
-plt.plot(df1[var2], df1['T (K)']*1e6, '-o')
-plt.xlabel(var2); plt.ylabel('T (uK)'); plt.tight_layout()
-plt.title('T measured using '+ fitYVar)
-plt.tight_layout()
+# df1 = df1.reset_index()
+
+
+# plt.figure(figsize=(5,4))
+# plt.plot(df1[var2], df1['T (K)']*1e6, '-o')
+# plt.xlabel(var2); plt.ylabel('T (uK)'); plt.tight_layout()
+# plt.title('T measured using '+ fitYVar)
+# plt.tight_layout()
 
 #%%
 # ImageAnalysisCode.Plot_2Dscan_Errbars(df1, var1, var2, 'T (K)', 1e6)
