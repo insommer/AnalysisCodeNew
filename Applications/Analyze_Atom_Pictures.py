@@ -1,16 +1,24 @@
 from ImageAnalysis import ImageAnalysisCode
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.ndimage import rotate
+# import matplotlib.pyplot as plt
+# from scipy.ndimage import rotate
 import pandas as pd
 import os
-from scipy import constants
+# from scipy import constants
 
 ####################################
 #Set the date and the folder name
 #################################### 1.0 = 85.5A , 0.9 = 77.4A , 0.8 = 69.5A , 0.7 = 61.6A 
+<<<<<<< HEAD
 # dataRootFolder = r"C:\Users\insommer\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
 dataRootFolder = 'D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data'
+=======
+<<<<<<< HEAD
+dataRootFolder = r"C:\My Programs\Sommer lab data analysis\Data"
+=======
+dataRootFolder = r"C:\Users\insommer\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
+>>>>>>> 2846850425398379029d7b5bb006ea173ee56d43
 # dataRootFolder = r'F:\Data'
 
 date = '1/9/2026'
@@ -26,6 +34,7 @@ data_folder = [
     # 'D1_RFscan_noRamp_ScanVert_1.33_1.53A_ZS0.38A_Cam0.15A'
     # 'D1_thermo_noRamp_Delta_1_29MHz_scanRaman',
     # 'D1_thermo_noRamp_Delta_1_27MHz_Raman0.15',
+<<<<<<< HEAD
     # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
     # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
     # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
@@ -34,6 +43,19 @@ data_folder = [
     # 'cMOTthermo',
     # 'D1atomsNoRamp_0.5msTOF',
     'D1ThermoNoRamp',
+=======
+<<<<<<< HEAD
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
+=======
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
+    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
+>>>>>>> 2846850425398379029d7b5bb006ea173ee56d43
 
 
 ]
@@ -309,7 +331,11 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 # var2 = 'D1_Re_FRQ'
 # var1 = 'RamanDelta_MHz'
 # var2 = 'Delta1_MHz'
+<<<<<<< HEAD
+# var2 = 'D1Time_ms'
+=======
 # # var2 = 'D1Time_ms'
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
 
 # # var1 = 'D1RampTime_ms'
 # # var2 = 'D1Time_ms'
@@ -320,6 +346,10 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 # # # # # # # var1 = 'D1CoolingPowerRamp_mW'
 # # # # # # # var2 = 'D1RampTime_ms'
 
+<<<<<<< HEAD
+# fitYVar = 'Ywidth'
+
+=======
 # # # # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
 # # # # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
 # # # var1 = 'VerticalBiasCurrent'
@@ -328,6 +358,7 @@ var2 = 'ZSBiasCurrent'
 
 fitYVar = 'Ywidth'
 
+<<<<<<< HEAD
 df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
                                             #fltedData,
                                             var1, 
@@ -335,6 +366,16 @@ df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'],
                                             fitXVar='TOF',
                                             fitYVar=fitYVar,
                                             do_plot=1, add_Text=1)
+=======
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
+# df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
+#                                             #fltedData,
+#                                             var1, 
+#                                             var2, 
+#                                             fitXVar='TOF',
+#                                             fitYVar=fitYVar,
+#                                             do_plot=1, add_Text=1)
+>>>>>>> 2846850425398379029d7b5bb006ea173ee56d43
 
 
 df1 = df1.reset_index()

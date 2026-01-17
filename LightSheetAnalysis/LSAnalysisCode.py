@@ -6,6 +6,9 @@ import os
 import pandas as pd
 import re
 from ImageAnalysis import ImageAnalysisCode
+from scipy.special import erf
+from scipy.signal import lfilter, find_peaks
+
 
 
 c = s.c # speed of light [meter/sec]
@@ -210,7 +213,97 @@ def BGsubtraction_alt(imagesList, region_size):
         corrected_images.append(corrected)
     return corrected_images
     
+#############################
+# Light sheet fitting functions
+
+# convolution between step fxn and Gaussian PSF
+def GaussianIntegral(x,Mu,Width,Amp):
         
+    R = np.sqrt(2) / Width
+    
+    func = Amp * np.sqrt(np.pi) / (2*R) * ( erf(R*(x+1-Mu)) - erf(R*(x-Mu)) )
+    
+    return func
+
+# integral of convolution between step fxn and Gaussian PSF
+    # A,B - start and end locations of the peak
+    # Width parameter gives the resolution
+def GaussianConvIntegral(x, A, B, Width, Amp):
+    
+    R = np.sqrt(2) / Width
+    
+    func = A * np.sqrt(np.pi)/(2*R) * (
+        (x+1-A)*erf(R*(x+1-A)) - (x+1-B)*erf(R*(x+1-B)) - (x-A)*erf(R*(x-A)) + 
+        (x-B)*erf(R*(x-B)) + 1/(R*np.sqrt(np.pi)) * (
+            np.exp(-(R*(x+1-A))**2) + np.exp(-(R*(x-B))**2) - np.exp(-(R*(x-A))**2) - 
+            np.exp(-(R*(x+1-B))**2)
+            ) 
+        )
+    
+    return func
 
 
+def PickSlice(self,imageArray, sliceLocations):
+    
+    slices = []
+    
+    for j in sliceLocations:
+        
+        temp = imageArray[:,j]
+        slices.append(temp)
+    
+    return slices
 
+
+def SmoothSlice(self,sliceArray, window):
+    
+    b = np.ones(window) / window
+    smooth_slice = lfilter(b,1,sliceArray)
+    
+    return smooth_slice
+
+
+def FitSlice_shortAxis(Slice, PeakNumber, PixelSize, PlotFigure=True):
+    
+    Nx = len(Slice)
+    x_index = np.linspace(0, Nx-1, Nx)
+
+    window = 5
+    # b = np.ones(window) / window
+    # smooth_slice = lfilter(b, 1, Slice)
+    smooth_slice = SmoothSlice(Slice,window)
+    
+    peaksGuess, peaksProperties = find_peaks(smooth_slice, prominence=5)
+    
+    fitX = np.linspace(0, Nx-1, Nx)
+    temp = []
+    optimMu = []
+    optimWidth = []
+
+    for j in range(PeakNumber):
+        
+        guess = [peaksGuess[j], 3, peaksProperties['prominences'][j]]
+        opt, _ = curve_fit(GaussianIntegral, x_index, Slice, p0=guess)
+        
+        
+        print('Half-width of peak', j+1, '=', round(opt[1]*PixelSize,3), 'um')
+        fitY = GaussianIntegral(fitX, opt[0], opt[1], opt[2])
+        
+        temp.append(fitY)
+        optimMu.append(opt[0])
+        optimWidth.append(opt[1]*PixelSize)
+    
+    print('Peak-to-peak distances =', np.round(np.diff(optimMu)*PixelSize,3), 'μm')
+    
+    if PlotFigure:
+        plt.figure()
+        plt.scatter(x_index, Slice)
+        
+        for k in range(PeakNumber):
+            plt.plot(temp[k], 'red')
+        
+        padding = 30
+        plt.xlim((peaksGuess[0] - padding, peaksGuess[-1] + padding))
+    
+    # returned optimized locations of the peaks (float)
+    return optimMu, optimWidth

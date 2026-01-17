@@ -32,7 +32,6 @@ import warnings
 
 from ImageAnalysis.ExperimentParameters import ExperimentParams
 
-
 def GetDataLocation(date, DataPath=r'D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data'):
     warnings.warn("GetDataLocation will be replaced with GetDayFolder(date, root= )", DeprecationWarning, stacklevel=2)
     return os.path.join(DataPath, datetime.datetime.strptime(date, '%m/%d/%Y').strftime('%Y/%m-%Y/%d %b %Y'))

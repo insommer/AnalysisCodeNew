@@ -28,7 +28,11 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, peak_prominence=0.05, sigma_gues
     Freq = df['RF_FRQ_MHz'].values
     Response = df['XatomNumber'].interpolate().values # in case there are nan values
 
+<<<<<<< HEAD
+    ResponseSmoothed = savgol_filter(Response, window_length=3, polyorder=2)
+=======
     ResponseSmoothed = savgol_filter(Response, window_length=4, polyorder=2)
+>>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
 
     # Peak detection
     freq_step = np.mean(np.diff(Freq))
@@ -103,4 +107,128 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, peak_prominence=0.05, sigma_gues
         plt.ylabel('XatomNumber')
         plt.tight_layout()
         
+    return stats
+
+def LandeG(J,L,S,gL,gS):
+    '''
+    Parameters
+    ----------
+    J : Float
+        Total angular momentum
+    L : Float
+        Orbital angular momenum.
+    S : Float
+        Spin.
+    gL : Float
+        Orbital g factor.
+    gS : Float
+        Spin g factor.
+
+    Returns
+    -------
+    Float
+        Lande G factor for a given coupled angular momenta. Returns hyperfine g if 
+        J->F, L->J, S->I
+
+    '''
+    
+    return (gL * ((J * (J + 1) + L * (L + 1) - S * (S + 1))/(2 * J + 1))
+            + gS * ((J * (J + 1) + S * (S + 1) - L * (L + 1))/(2 * J + 1)))
+
+def NumStates(J):
+    '''
+    Given a value for the angular momentum, returns number of mf values
+    '''
+    if not(2 * J == int(2 * J)):
+        raise ValueError('J must be a half integer')
+    return int(2 * J + 1)
+
+def BfieldFromRF(stats, centers, widths, VerticalBiasCurrent, ZSBiasCurrent, CamBiasCurrent):
+    '''
+    Parameters
+    ----------
+    stats : TYPE
+        DESCRIPTION.
+    centers : TYPE
+        DESCRIPTION.
+    widths : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    '''
+    # muB / hbar
+    muB = 1.399624604
+    
+    gS = 2.0023010
+    gL = 0.99999587
+    gI=-0.0004476540
+    
+    def gJ(state):
+        return LandeG(state[2], state[0], state[1], gL, gS)
+    def gF(state, gj):
+        return LandeG(state[3], state[2], state[4], gj, gI)
+    def ResonanceShift(stats, centers):
+        energyshift = []
+        for i in range(len(stats[centers])):
+            energyshift.append(float(stats[centers][i] - 228.205))
+        stats['energyShift (MHz)'] = pd.DataFrame(energyshift)
+        return stats
+    
+    # List of hyperfine structure energy states
+    # state = np.array([l, s, j, f, i])
+    
+    # Ground States = 0,1 , D1 States = 2,3 , D2 States = 4,5,6
+    states = [[0, 0.5, 0.5, 0.5, 1], [0, 0.5, 0.5, 1.5, 1]]
+    
+    # np.array([1, 0.5, 0.5, 0.5, 1]),np.array([1, 0.5, 0.5, 1.5, 1]),
+    # np.array([1, 0.5, 1.5, 0.5, 1]), np.array([1, 0.5, 1.5, 1.5, 1]),
+    # np.array([1, 0.5, 1.5, 2.5, 1])]
+
+    gj = []
+    for i in range(len(states)):
+        gj.append(gJ(states[i]))
+        
+    gf = []
+    for i in range(len(states)):
+        gf.append(gF(states[i], gj[i]))
+    
+    B = []
+    
+    statsEnergy = ResonanceShift(stats, centers)
+    avg = []
+    for l in range(len(stats[centers])):
+        
+        E = statsEnergy['energyShift (MHz)'][l]
+        B.append([])
+        
+        
+        for i in range(len(states)):
+            
+            N = NumStates(states[i][3])
+            mf = np.linspace(-states[i][3], states[i][3], N)
+            coef = np.zeros(N, dtype=float)
+            B[l].append([])
+            
+            
+            for k in range(len(mf)):
+                
+                coef[k] = gf[i] * muB * mf[k]
+                
+                B[l][i].append(float(E/coef[k]))
+        # print(B[l][0][1], B[l][1][1])
+        
+        avg.append(abs(round(((B[l][0][1] + B[l][1][1]) / 2), 3)))
+            # print(B[l][i])
+            # avg.append(B[l][i][1])
+        
+        
+    # print(avg) 
+    # stats['B (G)'] = B
+    stats['B (G)'] = avg
+    
+    print('B Field Strength from Peaks:', avg)  
+    
     return stats
