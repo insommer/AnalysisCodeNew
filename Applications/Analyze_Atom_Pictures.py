@@ -9,10 +9,11 @@ from scipy import constants
 ####################################
 #Set the date and the folder name
 #################################### 1.0 = 85.5A , 0.9 = 77.4A , 0.8 = 69.5A , 0.7 = 61.6A 
-dataRootFolder = r"C:\Users\insommer\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
+# dataRootFolder = r"C:\Users\insommer\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
+dataRootFolder = 'D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data'
 # dataRootFolder = r'F:\Data'
 
-date = '12/03/2025'
+date = '1/9/2026'
 
 data_folder = [
     # 'MOT atoms vs LF attn TOF 0.2 ms_1',
@@ -25,10 +26,14 @@ data_folder = [
     # 'D1_RFscan_noRamp_ScanVert_1.33_1.53A_ZS0.38A_Cam0.15A'
     # 'D1_thermo_noRamp_Delta_1_29MHz_scanRaman',
     # 'D1_thermo_noRamp_Delta_1_27MHz_Raman0.15',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
+    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
+    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
+    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
+    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
+    # 'cmot atoms 0.5 ms tof',
+    # 'cMOTthermo',
+    # 'D1atomsNoRamp_0.5msTOF',
+    'D1ThermoNoRamp',
 
 
 ]
@@ -48,7 +53,7 @@ overwriteOldResults = 1
 examNum = None #The number of runs to exam.
 examFrom = None #Set to None if you want to check the last several runs. 
 autoCrop = 0
-showRawImgs = 0
+showRawImgs = 1
 
 
 # in the format of [zyla, chameleon]
@@ -318,21 +323,21 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 # # # # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
 # # # # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
 # # # var1 = 'VerticalBiasCurrent'
-# # var1 = 'CamBiasCurrent'
-# # var2 = 'ZSBiasCurrent'
+var1 = 'CamBiasCurrent'
+var2 = 'ZSBiasCurrent'
 
-# fitYVar = 'Ywidth'
+fitYVar = 'Ywidth'
 
-# df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
-#                                             #fltedData,
-#                                             var1, 
-#                                             var2, 
-#                                             fitXVar='TOF',
-#                                             fitYVar=fitYVar,
-#                                             do_plot=1, add_Text=1)
+df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
+                                            #fltedData,
+                                            var1, 
+                                            var2, 
+                                            fitXVar='TOF',
+                                            fitYVar=fitYVar,
+                                            do_plot=1, add_Text=1)
 
 
-# df1 = df1.reset_index()
+df1 = df1.reset_index()
 
 
 # plt.figure(figsize=(5,4))

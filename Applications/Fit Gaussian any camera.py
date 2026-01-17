@@ -19,35 +19,21 @@ dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 date = '12/12/2025'
 
 camera = 'Basler'
-powr = 70
+powr = [15,30,50,70]
 # camera = 'Andor'
 data_folder = [
-    # fr'{camera}/Focus LS 3.302 mm',
-    # fr'{camera}/Focus LS 3.556 mm',
-    # fr'{camera}/Focus LS 3.81 mm',
-    # fr'{camera}/Focus LS 4.064 mm',
-    fr'{camera}/Telescope f1+f2 95 mm power 50',
-    fr'{camera}/Telescope f1+f2 214 mm power 50',
-    fr'{camera}/Telescope f1+f2 331 mm power 50',
-    fr'{camera}/Telescope f1+f2 416 mm power 50',
-    
-    fr'{camera}/Telescope f1+f2 95 mm power 70',
-    fr'{camera}/Telescope f1+f2 214 mm power 70',
-    fr'{camera}/Telescope f1+f2 331 mm power 70',
-    fr'{camera}/Telescope f1+f2 416 mm power 70',
-    
-    fr'{camera}/Telescope f1+f2 95 mm power 15',
-    fr'{camera}/Telescope f1+f2 214 mm power 15',
-    fr'{camera}/Telescope f1+f2 331 mm power 15',
-    fr'{camera}/Telescope f1+f2 416 mm power 15',
-
-    fr'{camera}/Telescope f1+f2 95 mm power 30',
-    fr'{camera}/Telescope f1+f2 214 mm power 30',
-    fr'{camera}/Telescope f1+f2 331 mm power 30',
-    fr'{camera}/Telescope f1+f2 416 mm power 30',
-
-
+    # fr'{camera}/Telescope shift-5 93 mm power {powr}',
+    # fr'{camera}/Telescope shift-5 205 mm power {powr}',
+    # fr'{camera}/Telescope shift-5 304 mm power {powr}',
+    # fr'{camera}/Telescope shift-5 421 mm power {powr}',
     ]
+
+for p in powr:
+    data_folder.append(fr'{camera}/Telescope shift+5 87 mm power {p}')
+    data_folder.append(fr'{camera}/Telescope shift+5 196 mm power {p}')
+    data_folder.append(fr'{camera}/Telescope shift+5 305 mm power {p}')
+    data_folder.append(fr'{camera}/Telescope shift+5 402 mm power {p}')
+
 
 repetition = 6
 commonPhrase = True
@@ -166,10 +152,11 @@ else:
     
         for val2, group in stats.groupby(scanVar2):
             ax.errorbar(group[scanVar1], group[col+'_mean'], yerr=group[col+'_std'],
-                        marker='o', label=f'{scanVar2}={val2:.2f}', capsize=3)
+                        marker='o', label=f'Power={val2:.2f}', capsize=3)
     
         ax.set_xlabel(scanVar1+' (mm)')
         ax.set_ylabel(col+' (um)')
+        ax.grid(True, alpha=0.3)
         ax.legend()
         plt.tight_layout()
 
