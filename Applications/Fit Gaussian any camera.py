@@ -16,30 +16,25 @@ plt.close('all')
 
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '12/12/2025'
+date = '1/19/2026'
 
 camera = 'Basler'
 powr = [15,30,50,70]
 # camera = 'Andor'
 data_folder = [
-    # fr'{camera}/Telescope shift-5 93 mm power {powr}',
-    # fr'{camera}/Telescope shift-5 205 mm power {powr}',
-    # fr'{camera}/Telescope shift-5 304 mm power {powr}',
-    # fr'{camera}/Telescope shift-5 421 mm power {powr}',
     ]
 
 for p in powr:
-    data_folder.append(fr'{camera}/Telescope shift+5 87 mm power {p}')
-    data_folder.append(fr'{camera}/Telescope shift+5 196 mm power {p}')
-    data_folder.append(fr'{camera}/Telescope shift+5 305 mm power {p}')
-    data_folder.append(fr'{camera}/Telescope shift+5 402 mm power {p}')
+    data_folder.append(fr'{camera}/Shift lens+7 99 mm power {p}')
+    data_folder.append(fr'{camera}/Shift lens+7 210 mm power {p}')
+    data_folder.append(fr'{camera}/Shift lens+7 297 mm power {p}')
+    data_folder.append(fr'{camera}/Shift lens+7 394 mm power {p}')
 
 
 repetition = 6
 commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
-multiG = True
 
 doPlot = 0
 angle = 0
