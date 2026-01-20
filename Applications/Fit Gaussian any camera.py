@@ -16,19 +16,26 @@ plt.close('all')
 
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '1/19/2026'
+date = '1/20/2026'
 
 camera = 'Basler'
-powr = [15,30,50,70]
+powr = [70,]
 # camera = 'Andor'
 data_folder = [
     ]
 
 for p in powr:
-    data_folder.append(fr'{camera}/Shift lens+7 99 mm power {p}')
-    data_folder.append(fr'{camera}/Shift lens+7 210 mm power {p}')
-    data_folder.append(fr'{camera}/Shift lens+7 297 mm power {p}')
-    data_folder.append(fr'{camera}/Shift lens+7 394 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 237 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 231 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 226 mm power {p}')
+    data_folder.append(fr'{camera}/After first pass 219 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 217 mm power {p}')
+    data_folder.append(fr'{camera}/After first pass 213 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 208 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 205 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 202 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 195 mm power {p}')
+    # data_folder.append(fr'{camera}/After first pass 188 mm power {p}')
 
 
 repetition = 6
@@ -36,7 +43,7 @@ commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
 
-doPlot = 0
+doPlot = 1
 angle = 0
 
 # rowstart=720
