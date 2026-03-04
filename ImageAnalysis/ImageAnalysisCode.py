@@ -3715,8 +3715,10 @@ def FitGaussian(gaussImageFile, graph=True, graphOption='Wide'):
 
 
 def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
-
-    def w_z(z, w0, z0, zR):
+    
+    
+    def w_z(z, w0, z0):
+        zR = np.pi * w0**2 / 1064e-9
         return w0 * np.sqrt(1 + ((z - z0) / zR)**2)
     
     # assumes distances in mm, waist in um
@@ -3725,21 +3727,21 @@ def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
         w_meas = stats[col+'_mean'].values
         w_err = stats[col+'_std'].values
         
-        p0 = [min(w_meas), z[np.argmin(w_meas)], (max(z) - min(z)) / 2]
+        p0 = [min(w_meas), z[np.argmin(w_meas)]]
         
         popt, pcov = curve_fit(w_z, z, w_meas, p0=p0, sigma=w_err, absolute_sigma=True)
         
-        w0_fit, z0_fit, zR_fit = popt
+        w0_fit, z0_fit = popt
         perr = np.sqrt(np.diag(pcov))
         
         if doPlot:
-            z_fit = np.linspace(min(z), max(z), 300)
+            z_fit = np.linspace(min(z), max(z), 1000)
             fig, ax = plt.subplots(figsize=(4,3))
-            ax.errorbar(z, w_meas, yerr=w_err, fmt='o', capsize=3)
-            ax.plot(z_fit, w_z(z_fit, *popt), 'r-')
+            ax.errorbar(z*1e3, w_meas*1e6, yerr=w_err*1e6, fmt='o', capsize=3)
+            ax.plot(z_fit*1e3, w_z(z_fit, *popt)*1e6, 'r-')
             ax.set_xlabel('Distance (mm)')
             ax.set_ylabel(col+' (μm)')
-            ax.text(0.3, 0.85, f'w0={w0_fit:.2f} μm\nz0={z0_fit:.2f} mm', transform=ax.transAxes, bbox=dict(facecolor='white'))
+            ax.text(0.3, 0.85, f'w0={w0_fit*1e6:.2f} μm\nz0={z0_fit*1e3:.2f} mm', transform=ax.transAxes, bbox=dict(facecolor='white'))
             plt.tight_layout()
             
             

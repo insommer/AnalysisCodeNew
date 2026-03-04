@@ -16,26 +16,24 @@ plt.close('all')
 
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '1/20/2026'
+date = '3/3/2026'
 
 camera = 'Basler'
-powr = [70,]
+# powr = [15,30,50,70]
+powr = [50]
 # camera = 'Andor'
 data_folder = [
     ]
 
 for p in powr:
-    # data_folder.append(fr'{camera}/After first pass 237 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 231 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 226 mm power {p}')
-    data_folder.append(fr'{camera}/After first pass 219 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 217 mm power {p}')
-    data_folder.append(fr'{camera}/After first pass 213 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 208 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 205 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 202 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 195 mm power {p}')
-    # data_folder.append(fr'{camera}/After first pass 188 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 268.38 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 276.14 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 283.17 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 290.25 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 297.74 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 304.88 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 314.28 mm power {p}')
+    data_folder.append(fr'{camera}/Lens only BSPM 321.62 mm power {p}')
 
 
 repetition = 6
@@ -43,7 +41,7 @@ commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
 
-doPlot = 1
+doPlot = 0
 angle = 0
 
 # rowstart=720
@@ -142,6 +140,10 @@ if stats['Value'].nunique() == 1:
         # plt.legend(title='Power %')
         plt.tight_layout()
         
+    # convert distance and waists to meters
+    stats['Distance'] = stats['Distance']*1e-3
+    width_cols = [col for col in stats.columns if 'width' in col]
+    stats[width_cols] = stats[width_cols] * 1e-6
     
     ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
 
@@ -154,12 +156,12 @@ else:
     
         for val2, group in stats.groupby(scanVar2):
             ax.errorbar(group[scanVar1], group[col+'_mean'], yerr=group[col+'_std'],
-                        marker='o', label=f'Power={val2:.2f}', capsize=3)
+                        marker='o', label=f'Power={val2:.0f}%', capsize=3)
     
         ax.set_xlabel(scanVar1+' (mm)')
         ax.set_ylabel(col+' (um)')
         ax.grid(True, alpha=0.3)
-        ax.legend()
+        ax.legend(fontsize=8)
         plt.tight_layout()
 
 
