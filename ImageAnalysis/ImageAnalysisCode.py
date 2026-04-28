@@ -3721,6 +3721,9 @@ def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
         zR = np.pi * w0**2 / 1064e-9
         return w0 * np.sqrt(1 + ((z - z0) / zR)**2)
     
+    popts = []
+    pcovs = []
+    
     # assumes distances in mm, waist in um
     for col in colsForAnalysis:
         z = stats['Distance'].values
@@ -3730,6 +3733,8 @@ def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
         p0 = [min(w_meas), z[np.argmin(w_meas)]]
         
         popt, pcov = curve_fit(w_z, z, w_meas, p0=p0, sigma=w_err, absolute_sigma=True)
+        popts.append(popt)
+        pcovs.append(pcov)
         
         w0_fit, z0_fit = popt
         perr = np.sqrt(np.diag(pcov))
@@ -3743,6 +3748,8 @@ def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
             ax.set_ylabel(col+' (μm)')
             ax.text(0.3, 0.85, f'w0={w0_fit*1e6:.2f} μm\nz0={z0_fit*1e3:.2f} mm', transform=ax.transAxes, bbox=dict(facecolor='white'))
             plt.tight_layout()
+    
+    return popts, pcovs
             
             
 def RecognizeCommonPhrase(dataPathList, repetition):
