@@ -28,12 +28,13 @@ plt.close('all')
 ####################################
 #Set the date and the folder name
 ####################################
-date = '2/21/2025'
+date = '2/13/2025'
 data_path =r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 
 # data_folder = r'/FLIR/Atom cloud for overlap'
 # data_folder = r'/FLIR/ODT high power crossing angle'
-data_folder = r'/FLIR/Chop cloud_1'
+# data_folder = r'/FLIR/Chop cloud_1'
+data_folder = r'/FLIR/ODT high power crossing angle'
 
 # plt.rcParams['image.interpolation'] = 'nearest'
 
@@ -41,7 +42,7 @@ data_folder = r'/FLIR/Chop cloud_1'
 ####################################
 #Parameter Setting
 
-examNum = None #The number of runs to exam.
+examNum = 3 #The number of runs to exam.
 examFrom = None #Set to None if you want to check the last several runs. 
 do_plot = True
 
@@ -49,9 +50,9 @@ showTimestamp = True
 variablesToDisplay = None
 variablesToDisplay = [
     # 'LS_width',
-    'wait',
-    'LowServo1',
-    'LS_width',
+    # 'wait',
+    # 'LowServo1',
+    # 'LS_width',
     # 'TOF',
     # 'Evap_timestep'
     # 'LS_width',
@@ -114,21 +115,22 @@ images_array, fileTime = ImageAnalysisCode.loadSeriesPGM(picturesPerIteration=pi
 variableLog = ImageAnalysisCode.LoadVariableLog(variableLog_folder)
 logTime = ImageAnalysisCode.Filetime2Logtime(fileTime, variableLog)
 
+Number_of_atoms, N_abs, ratio_array, columnDensities, deltaX, deltaY = ImageAnalysisCode.absImagingSimple(images_array, 
+                                                                                                          params=params,
+                firstFrame=0, correctionFactorInput=1, rowstart = rowstart, rowend = rowend, columnstart = columnstart,
+                columnend = columnend, subtract_burntin=0, preventNAN_and_INF=True)
 
 if variableFilterList:        
     filterList = ImageAnalysisCode.VariableFilter(logTime, variableLog, variableFilterList)
     images_array = np.delete(images_array, filterList, 0)
     logTime = list(np.delete(logTime, filterList, 0))
 
-# ImageAnalysisCode.ShowImagesTranspose(images_array, logTime, variableLog, 
-#                                       variablesToDisplay, showTimestamp=showTimestamp)
+ImageAnalysisCode.ShowImagesTranspose(images_array, logTime, variableLog, 
+                                      variablesToDisplay, showTimestamp=showTimestamp)
 
 
 
-Number_of_atoms, N_abs, ratio_array, columnDensities, deltaX, deltaY = ImageAnalysisCode.absImagingSimple(images_array, 
-                                                                                                          params=params,
-                firstFrame=0, correctionFactorInput=1, rowstart = rowstart, rowend = rowend, columnstart = columnstart,
-                columnend = columnend, subtract_burntin=0, preventNAN_and_INF=True)
+
 
 angle_deg= 40 # rotates ccw
 # angle_deg = -49

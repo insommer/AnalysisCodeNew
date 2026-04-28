@@ -1,6 +1,6 @@
 from ImageAnalysis import ImageAnalysisCode
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # from scipy.ndimage import rotate
 import pandas as pd
 import os
@@ -9,54 +9,21 @@ import os
 ####################################
 #Set the date and the folder name
 #################################### 1.0 = 85.5A , 0.9 = 77.4A , 0.8 = 69.5A , 0.7 = 61.6A 
-<<<<<<< HEAD
 # dataRootFolder = r"C:\Users\insommer\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
 dataRootFolder = 'D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data'
-=======
-<<<<<<< HEAD
-dataRootFolder = r"C:\My Programs\Sommer lab data analysis\Data"
-=======
-dataRootFolder = r"C:\Users\insommer\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
->>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
->>>>>>> 2846850425398379029d7b5bb006ea173ee56d43
-# dataRootFolder = r'F:\Data'
 
-date = '1/9/2026'
+
+date = '4/28/2026'
 
 data_folder = [
-    # 'MOT atoms vs LF attn TOF 0.2 ms_1',
-    # 'D1_atoms_noRamp_Vert1.33A_ZS0.38A_cam0.15A',
-    # 'D1_atoms_noRamp_Vert1.33A_ZS0.38A_Cam0.15A'
-    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_ScanCam0_0.15A_1'
-    # 'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
-    # 'D1_RFscan_noRamp_ScanVert0.83_1.23A_ZS0.38A_Cam0.15A_1'
-    # 'D1_thermo_noRamp_Vert1.33A_ZS0.38A_Cam0.15A'
-    # 'D1_RFscan_noRamp_ScanVert_1.33_1.53A_ZS0.38A_Cam0.15A'
-    # 'D1_thermo_noRamp_Delta_1_29MHz_scanRaman',
-    # 'D1_thermo_noRamp_Delta_1_27MHz_Raman0.15',
-<<<<<<< HEAD
-    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
-    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
-    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
-    # 'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
-    # 'cmot atoms 0.5 ms tof',
-    # 'cMOTthermo',
-    # 'D1atomsNoRamp_0.5msTOF',
-    'D1ThermoNoRamp',
-=======
-<<<<<<< HEAD
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
-=======
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_3',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_2',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A_1',
-    'D1_RFscan_noRamp_Vert1.33A_ZS0.38A_Cam0.15A',
->>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
->>>>>>> 2846850425398379029d7b5bb006ea173ee56d43
-
+    # 'RF scan ZS 0.38A Cam 0.15A Vert 1.33A'
+    # 'RF fixed 228.5 MHz'
+    # 'RF fixed 228.5 MHz ZS 0.38A Cam 0.15A Scan Vert'
+    # 'RF fixed 228.5 MHz Vert 1.2A Cam 0.15A Scan ZS_1'
+    # 'RF scan ZS 0.675A Cam 0.15A Vert 1.2A'
+    # 'D1 thermo 0.5 ms cooling'
+    # 'D1 thermo 0.5 ms cooling Vary vert_1'
+    'D1 thermo disable MOT shutter in TOF word'
 
 ]
 
@@ -75,7 +42,7 @@ overwriteOldResults = 1
 examNum = None #The number of runs to exam.
 examFrom = None #Set to None if you want to check the last several runs. 
 autoCrop = 0
-showRawImgs = 1
+showRawImgs = 0
 
 
 # in the format of [zyla, chameleon]
@@ -187,7 +154,7 @@ for cam in cameras:
 
 #     results['zyla'] = ImageAnalysisCode.FilterDataframe(results['zyla'], col1, thresh)
     
-results['zyla']['XatomNumber'] = np.clip(results['zyla']['XatomNumber'], a_min=0, a_max=1e7)
+# results['zyla']['XatomNumber'] = np.clip(results['zyla']['XatomNumber'], a_min=0, a_max=1e7)
 
 # %%
 
@@ -197,23 +164,23 @@ results['zyla']['XatomNumber'] = np.clip(results['zyla']['XatomNumber'], a_min=0
 
 for cam in cameras:
     
-    # ImageAnalysisCode.PlotResults(results[cam], 'RF_FRQ_MHz', 'XatomNumber',
-    #                               filterLists=filterLists,
-    #                               # iterateVariable='VerticalBiasCurrent', 
-    #                               # groupby='ODT_Position', 
-    #                                 groupbyX=1, 
-    #                               threeD=0,
-    #                               figSize = 0.5
-    #                               )    
+    ImageAnalysisCode.PlotResults(results[cam], 'RF_FRQ_MHz', 'XatomNumber',
+                                  filterLists=filterLists,
+                                  # iterateVariable='VerticalBiasCurrent', 
+                                  # groupby='ODT_Position', 
+                                    groupbyX=1, 
+                                  threeD=0,
+                                  figSize = 0.5
+                                  )    
     
-    # ImageAnalysisCode.PlotResults(results[cam], 'RF_FRQ_MHz', 'YatomNumber',
-    #                               filterLists=filterLists,
-    #                               # iterateVariable='VerticalBiasCurrent', 
-    #                               # groupby='ODT_Position', 
-    #                                 groupbyX=1, 
-    #                               threeD=0,
-    #                               figSize = 0.5
-    #                               )    
+    ImageAnalysisCode.PlotResults(results[cam], 'RF_FRQ_MHz', 'YatomNumber',
+                                  filterLists=filterLists,
+                                  # iterateVariable='VerticalBiasCurrent', 
+                                  # groupby='ODT_Position', 
+                                    groupbyX=1, 
+                                  threeD=0,
+                                  figSize = 0.5
+                                  )    
     
     # # ImageAnalysisCode.PlotResults(results[cam], 'cMOT_dwell_ms', 'XatomNumber',
     # #                               filterLists=filterLists,
@@ -235,7 +202,7 @@ for cam in cameras:
 
     variablesToDisplay = [
                         # # 'Coil_medB', 
-                            'TOF',
+                            # 'RF_FRQ_MHz',
                             # 'D1_AOM_VCO',
                             # 'D1_Re_VCO'
                             # 'D1Time_ms',
@@ -258,11 +225,11 @@ for cam in cameras:
                             # 'RF_pulsetime_us'
                             # 'LowServo1',
                             # 'Lens_Position',
-                            'RF_FRQ_MHz',
+                            # 'RF_FRQ_MHz',
                             # 'RF_pulsetime_us'
                             # 'VericalBiasCurrent',
                             # 'D1_Re_VCO',
-                            # 'Lens_pos'
+                            'TOF'
                           ]
     showTimestamp = False
     textY = 1
@@ -283,7 +250,7 @@ for cam in cameras:
                                               variableLog=results[cam], 
                                               # logTime=varLog[cam].index,
                                               uniformscale=uniformscale,
-                                              fontSizeRate=1.6,
+                                              fontSizeRate=1.8,
                                               textLocationY=0.1, rcParams=rcParams,
                                               figSizeRate=1, 
                                               sharey='col'
@@ -297,27 +264,27 @@ for cam in cameras:
 # scanVar1 = 'D1Time_ms'
 # # scanVar2 = 'D1PowerRatio'
 
-scanVar1 = 'RF_FRQ_MHz'
+# scanVar1 = 'RF_FRQ_MHz'
 # # # scanVar2 = 'RF_AntennaPower'
 # scanVar2 = 'VerticalBiasCurrent'
-scanVar2 = 'ZSBiasCurrent'
+# scanVar2 = 'ZSBiasCurrent'
 # # scanVar2 = 'CamBiasCurrent'
 
 
-dependentVar = 'XatomNumber'
-ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
+# dependentVar = 'XatomNumber'
+# ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
 
 # %%
 
-scanVar1 = 'RF_FRQ_MHz'
+# scanVar1 = 'RF_FRQ_MHz'
 # # scanVar2 = 'RF_AntennaPower'
 # # scanVar2 = 'VerticalBiasCurrent'
-scanVar2 = 'ZSBiasCurrent'
+# scanVar2 = 'ZSBiasCurrent'
 # scanVar2 = 'CamBiasCurrent'
 
 
-dependentVar = 'YatomNumber'
-ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
+# dependentVar = 'YatomNumber'
+# ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
 
 
 # %% THERMOMETRY
@@ -327,38 +294,15 @@ ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, depen
 # fltedData = ImageAnalysisCode.DataFilter(results['zyla'], filterLists=filterLists)
 
 
-# var1 = 'D1_Cooling_FRQ'
-# var2 = 'D1_Re_FRQ'
-# var1 = 'RamanDelta_MHz'
-# var2 = 'Delta1_MHz'
-<<<<<<< HEAD
-# var2 = 'D1Time_ms'
-=======
-# # var2 = 'D1Time_ms'
->>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
+# var1 = 'Evap_timestep'
+# var1 = 'D1Time_ms'
 
-# # var1 = 'D1RampTime_ms'
-# # var2 = 'D1Time_ms'
-
-# # # # # # var2 = 'D1RampTime_ms'
-# # # # # # var1 = 'D1TotalTime_ms'
-
-# # # # # # # var1 = 'D1CoolingPowerRamp_mW'
-# # # # # # # var2 = 'D1RampTime_ms'
-
-<<<<<<< HEAD
-# fitYVar = 'Ywidth'
-
-=======
-# # # # # # var1 =  'D1_AOM_Attn' #'D1Cooling_PowerPerBeam_mW'
-# # # # # # var2 = 'D1_Re_Attn' #'D1Repump_PowerPerBeam_mW'
-# # # var1 = 'VerticalBiasCurrent'
-var1 = 'CamBiasCurrent'
-var2 = 'ZSBiasCurrent'
+var1 = 'D1_AOM_Attn'
+# var2 = 'D1_Re_Attn'
+var2 = 'VerticalBiasCurrent'
 
 fitYVar = 'Ywidth'
 
-<<<<<<< HEAD
 df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
                                             #fltedData,
                                             var1, 
@@ -366,24 +310,14 @@ df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'],
                                             fitXVar='TOF',
                                             fitYVar=fitYVar,
                                             do_plot=1, add_Text=1)
-=======
->>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
-# df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
-#                                             #fltedData,
-#                                             var1, 
-#                                             var2, 
-#                                             fitXVar='TOF',
-#                                             fitYVar=fitYVar,
-#                                             do_plot=1, add_Text=1)
->>>>>>> 2846850425398379029d7b5bb006ea173ee56d43
 
 
-df1 = df1.reset_index()
+# df1 = df1.reset_index()
 
 
 # plt.figure(figsize=(5,4))
-# plt.plot(df1[var2], df1['T (K)']*1e6, '-o')
-# plt.xlabel(var2); plt.ylabel('T (uK)'); plt.tight_layout()
+# plt.plot(df1[var1], df1['T (K)']*1e6, '-o')
+# plt.xlabel(var1); plt.ylabel('T (uK)'); plt.tight_layout()
 # plt.title('T measured using '+ fitYVar)
 # plt.tight_layout()
 
@@ -403,4 +337,4 @@ df1 = df1.reset_index()
 
 #%% Save results dataframe?
 
-ImageAnalysisCode.saveResultsDF(results['zyla'], dayfolder)
+# ImageAnalysisCode.saveResultsDF(results['zyla'], dayfolder)

@@ -16,24 +16,40 @@ plt.close('all')
 
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '3/3/2026'
+date = '4/19/2026'
 
 camera = 'Basler'
-# powr = [15,30,50,70]
-powr = [50]
+# powr = [15,30,40,50,60,70]
+powr = [2, 2.5, 3, 3.5, 4, 4.5, 5]
+# powr = [15]
 # camera = 'Andor'
 data_folder = [
     ]
 
 for p in powr:
-    data_folder.append(fr'{camera}/Lens only BSPM 268.38 mm power {p}')
-    data_folder.append(fr'{camera}/Lens only BSPM 276.14 mm power {p}')
-    data_folder.append(fr'{camera}/Lens only BSPM 283.17 mm power {p}')
-    data_folder.append(fr'{camera}/Lens only BSPM 290.25 mm power {p}')
-    data_folder.append(fr'{camera}/Lens only BSPM 297.74 mm power {p}')
-    data_folder.append(fr'{camera}/Lens only BSPM 304.88 mm power {p}')
-    data_folder.append(fr'{camera}/Lens only BSPM 314.28 mm power {p}')
-    data_folder.append(fr'{camera}/Lens only BSPM 321.62 mm power {p}')
+    # data_folder.append(fr'{camera}/Last telescope attempt pos1 111.8 mm power {p}')
+    # data_folder.append(fr'{camera}/Last telescope attempt pos1 227.8 mm power {p}')
+    # data_folder.append(fr'{camera}/Last telescope attempt pos1 389.8 mm power {p}')
+    # data_folder.append(fr'{camera}/Last telescope attempt pos1 498.8 mm power {p}')
+    # data_folder.append(fr'{camera}/First order after AOM BSPM 402 mm power {p}')
+    # data_folder.append(fr'{camera}/First order after AOM BSPM 545 mm power {p}')
+    # data_folder.append(fr'{camera}/First order after AOM BSPM 707 mm power {p}')
+    # data_folder.append(fr'{camera}/Lens Shifted back maybe 8 mm power {p}')
+    
+    # data_folder.append(fr'{camera}/Focus 175lens BSPM 152 mm power {p}')
+    # data_folder.append(fr'{camera}/Focus 175lens BSPM 159.1 mm power {p}')
+    # data_folder.append(fr'{camera}/Focus 175lens BSPM 166.7 mm power {p}')
+    # data_folder.append(fr'{camera}/Focus 175lens BSPM 171.6 mm power {p}')
+    # data_folder.append(fr'{camera}/Focus 175lens BSPM 175.4 mm power {p}')
+    # data_folder.append(fr'{camera}/Focus 175lens BSPM 179.3 mm power {p}')
+    # data_folder.append(fr'{camera}/Focus 175lens BSPM 185 mm power {p}')
+    
+    data_folder.append(fr'{camera}/First order prop BSPM 145 mm power {p}')
+    data_folder.append(fr'{camera}/First order prop BSPM 286 mm power {p}')
+    data_folder.append(fr'{camera}/First order prop BSPM 409 mm power {p}')
+    data_folder.append(fr'{camera}/First order prop BSPM 531 mm power {p}')
+
+    
 
 
 repetition = 6
@@ -65,14 +81,14 @@ elif camera == 'Andor':
     pixSize = 6.5 #um/pix
 #%%
 
-df = pd.DataFrame(columns=['File', 'Condition', 'Value', 'Xcenter', 'Ycenter', 'Xwidth', 'Ywidth', 'Xamp', 'Yamp'])
+df = pd.DataFrame(columns=['File', 'Condition', 'Power', 'Xcenter', 'Ycenter', 'Xwidth', 'Ywidth', 'Xamp', 'Yamp'])
 
 if commonPhrase:
 
     conditions, values, distances = ImageAnalysisCode.RecognizeCommonPhrase(dataPath, repetition)
 
     df['Condition'] = conditions
-    df['Value'] = values
+    df['Power'] = values
     df['Distance'] = distances
     
 #%%
@@ -114,24 +130,24 @@ df['Xamp'] = Xamps; df['Yamp'] = Yamps
 
 colsForAnalysis = ['Xwidth', 'Ywidth']
 
-if df['Value'].isna().any():
+if df['Power'].isna().any():
     stats = df.groupby(['Distance'])[colsForAnalysis].agg(['mean', 'std']).reset_index()
     stats.columns = ['Distance'] + ['_'.join(col).strip() for col in stats.columns[1:]]
 else:
-    stats = df.groupby(['Distance', 'Value'])[colsForAnalysis].agg(['mean', 'std']).reset_index()
-    stats.columns = ['Distance', 'Value'] + ['_'.join(col).strip() for col in stats.columns[2:]]
+    stats = df.groupby(['Distance', 'Power'])[colsForAnalysis].agg(['mean', 'std']).reset_index()
+    stats.columns = ['Distance', 'Power'] + ['_'.join(col).strip() for col in stats.columns[2:]]
 
 
 
 #%%
 
-if stats['Value'].nunique() == 1:
+if stats['Power'].nunique() == 1:
     
     for col in colsForAnalysis:
         
         plt.figure(figsize=(4,3))
         
-        # for condition, group in stats.groupby('Value'):
+        # for condition, group in stats.groupby('Power'):
         #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
         plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
         
@@ -149,7 +165,7 @@ if stats['Value'].nunique() == 1:
 
 else:
     scanVar1 = 'Distance'
-    scanVar2 = 'Value'
+    scanVar2 = 'Power'
     
     for col in colsForAnalysis:
         fig,ax = plt.subplots(figsize=(4,3))

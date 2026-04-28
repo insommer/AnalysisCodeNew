@@ -2344,7 +2344,7 @@ def plotImgAndFitResult(imgs, popts, bgs=[], imgs2=None,
         
     if uniformscale:
         # vmax = imgShow.max()
-        vmax = 2
+        vmax = 1
     else:
         vmax = None
         
@@ -3747,7 +3747,11 @@ def FitGaussianWaist(stats, colsForAnalysis, doPlot=True):
             
 def RecognizeCommonPhrase(dataPathList, repetition):
     
-    pattern_both = re.compile(r'(?:(\d+(?:\.\d+)?)\s*mm).*?power\s*(\d+)$', re.IGNORECASE)
+    # pattern_both = re.compile(r'(?:(\d+(?:\.\d+)?)\s*mm).*?power\s*(\d+)$', re.IGNORECASE)
+    pattern_both = re.compile(r"(?:(\d+(?:\.\d+)?)\s*mm).*?power\s*(\d+(?:\.\d+)?)$", re.IGNORECASE)
+
+    
+
     pattern_distance_only = re.compile(r'(\d+(?:\.\d+)?)\s*mm', re.IGNORECASE)
 
     conditions = []
@@ -3762,7 +3766,7 @@ def RecognizeCommonPhrase(dataPathList, repetition):
 
         if match_both:
             distance = float(match_both.group(1))
-            value = int(match_both.group(2))
+            value = float(match_both.group(2))
             condition = re.sub(pattern_both, '', basename).strip()
         elif match_dist:
             distance = float(match_dist.group(1))
