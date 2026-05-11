@@ -23,7 +23,10 @@ data_folder = [
     # 'RF scan ZS 0.675A Cam 0.15A Vert 1.2A'
     # 'D1 thermo 0.5 ms cooling'
     # 'D1 thermo 0.5 ms cooling Vary vert_1'
-    'D1 thermo disable MOT shutter in TOF word'
+    # 'D1 thermo vary Cam bias',
+    # 'D1 thermo vary Cam bias_1'
+    'D1 thermo vary Cam bias_2'
+
 
 ]
 
@@ -299,11 +302,11 @@ for cam in cameras:
 
 var1 = 'D1_AOM_Attn'
 # var2 = 'D1_Re_Attn'
-var2 = 'VerticalBiasCurrent'
+var2 = 'CamBiasCurrent'
 
 fitYVar = 'Ywidth'
 
-df1 = ImageAnalysisCode.multiVariableThermometry(results['zyla'], 
+df1 = ImageAnalysisCode.multiVariableThermometry_v2(results['zyla'], 
                                             #fltedData,
                                             var1, 
                                             var2, 

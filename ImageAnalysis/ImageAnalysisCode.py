@@ -3089,47 +3089,76 @@ def temperature_model(t, w0, T):
     # model = w0*np.sqrt((kb*T*(t-t0)**2)/(m*w0**2))
     return model
 
-def temperature_fit(params, widths_array, tof_array,label="",do_plot=False, ax=None):
-    #Inputs: params object, widths in meters, times in seconds
-    #Optional: label like "x" or "y"
+# def temperature_fit(params, widths_array, tof_array,label="",do_plot=False, ax=None):
+#     #Inputs: params object, widths in meters, times in seconds
+#     #Optional: label like "x" or "y"
     
-    min_time = min(tof_array)
-    max_time = max(tof_array)
-    min_width = min(widths_array)
-    max_width = max(widths_array)
+#     min_time = min(tof_array)
+#     max_time = max(tof_array)
+#     min_width = min(widths_array)
+#     max_width = max(widths_array)
     
-    #remove Nans and Infs
+#     #remove Nans and Infs
+#     good_indexes = np.isfinite(widths_array)
+#     tof_array = tof_array[good_indexes]
+#     widths_array = widths_array[good_indexes]
+    
+#     w0guess = min_width
+#     slope = (max_width-min_width)/(max_time-min_time)
+#     Tguess = (slope)**2*params.m/params.kB 
+#     popt, pcov = curve_fit(temperature_model, tof_array, widths_array, p0 = [w0guess, Tguess])
+#     times_fit = np.linspace(min_time, max_time, 100)
+#     widths_fit = temperature_model(times_fit, popt[0], popt[1])
+    
+#     if (do_plot):
+#         #plot the widths vs. position
+#         if ax is None:
+#             plt.figure(figsize=(3,2))
+#             plt.title("{} T = {:.2f} uK".format(label, popt[1]*1e6))
+#             plt.xlabel("Time of flight (ms)")
+#             plt.ylabel("width of atom cloud (um)")
+#             plt.scatter(1e3*tof_array, 1e6*widths_array)
+#             plt.plot(1e3*times_fit, 1e6*widths_fit)
+#             plt.tight_layout()
+#         else:
+#             ax.set(title="{} T = {:.3g} uK".format(label, popt[1]*1e6), 
+#                    xlabel='Time of flight (ms)',
+#                    ylabel="width of atom cloud (um)")
+#             ax.scatter(1e3*tof_array, 1e6*widths_array)
+#             ax.plot(1e3*times_fit, 1e6*widths_fit)
+#         # if data_folder:
+#         #     plt.savefig(data_folder+r'\\'+"temperature x.png", dpi = 500)
+    
+#     return tof_array, times_fit, widths_fit, popt, pcov
+
+def temperature_fit(params, widths_array, tof_array, label="", do_plot=False, ax=None):
     good_indexes = np.isfinite(widths_array)
     tof_array = tof_array[good_indexes]
     widths_array = widths_array[good_indexes]
-    
-    w0guess = min_width
-    slope = (max_width-min_width)/(max_time-min_time)
-    Tguess = (slope)**2*params.m/params.kB 
-    popt, pcov = curve_fit(temperature_model, tof_array, widths_array, p0 = [w0guess, Tguess])
-    times_fit = np.linspace(min_time, max_time, 100)
-    widths_fit = temperature_model(times_fit, popt[0], popt[1])
-    
-    if (do_plot):
-        #plot the widths vs. position
-        if ax is None:
-            plt.figure(figsize=(3,2))
-            plt.title("{} T = {:.2f} uK".format(label, popt[1]*1e6))
-            plt.xlabel("Time of flight (ms)")
-            plt.ylabel("width of atom cloud (um)")
-            plt.scatter(1e3*tof_array, 1e6*widths_array)
-            plt.plot(1e3*times_fit, 1e6*widths_fit)
-            plt.tight_layout()
-        else:
-            ax.set(title="{} T = {:.3g} uK".format(label, popt[1]*1e6), 
-                   xlabel='Time of flight (ms)',
-                   ylabel="width of atom cloud (um)")
-            ax.scatter(1e3*tof_array, 1e6*widths_array)
-            ax.plot(1e3*times_fit, 1e6*widths_fit)
-        # if data_folder:
-        #     plt.savefig(data_folder+r'\\'+"temperature x.png", dpi = 500)
-    
-    return tof_array, times_fit, widths_fit, popt, pcov
+   
+    w0guess = min(widths_array)
+    slope = (max(widths_array)-min(widths_array))/(max(tof_array)-min(tof_array))
+    Tguess = (slope)**2 * params.m / params.kB
+   
+    popt, pcov = curve_fit(temperature_model, tof_array, widths_array, p0=[w0guess, Tguess])
+    perr = np.sqrt(np.diag(pcov))
+
+    # fit arrays
+    times_fit = np.linspace(min(tof_array), max(tof_array), 100)
+    widths_fit = temperature_model(times_fit, *popt)
+   
+    if do_plot:
+        plot_df = pd.DataFrame({'tof': tof_array, 'width': widths_array})
+        stats = plot_df.groupby('tof')['width'].agg(['mean', 'std']).reset_index()
+       
+        ax.errorbar(stats['tof']*1e3, stats['mean']*1e6, yerr=stats['std']*1e6,
+                    fmt='o', capsize=3, color='black', ecolor='gray', markersize=4)
+        ax.plot(times_fit*1e3, widths_fit*1e6, color='red', lw=1.2)
+       
+        ax.set_title(f"$T = {popt[1]*1e6:.2f} \pm {perr[1]*1e6:.2f}$ $\mu$K", fontsize=10)
+        ax.set(xlabel='TOF (ms)', ylabel="Width ($\mu$m)")
+   
+    return tof_array, times_fit, widths_fit, popt, pcov, perr
 
  
 def thermometry(params, images, tof_array, do_plot = False, data_folder = None):
@@ -3304,7 +3333,7 @@ def multiVariableThermometry(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
                                       do_plot=1, ax=ax)
         
         if do_plot and add_Text:
-            ax.text(0.03, 0.95, '{}\n= {}'.format(variables, tuple(round(x,2) for x in ind)), ha='left', va='top', transform=ax.transAxes)
+            ax.text(0.03, 0.95, '{}\n= {}'.format(variables, tuple(round(x,3) for x in ind)), ha='left', va='top', transform=ax.transAxes)
             # ax.text(0, 20, 'T (uK): {:.3f}'.format(popt[1]*1e6), ha='left', va='top')
 
         T.append( popt[1] )
@@ -3328,6 +3357,101 @@ def multiVariableThermometry(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
     df1['Size2'] = s2
 
     return df1
+
+def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
+                             atomNum='YatomNumber', sigma1='Xwidth', sigma2='Ywidth', sigma3='Ywidth',
+                             do_plot=1, add_Text=1):
+   
+    params = ExperimentParams(t_exp=10e-6, picturesPerIteration=4, cam_type="zyla")
+   
+    # Calculate means and standard deviations for error propagation
+    df_numeric = df.select_dtypes(include=np.number)
+    grouped = df_numeric.groupby(list(variables) + [fitXVar])
+    dfmean = grouped.mean()
+    dfstd = grouped.std()
+   
+    df1 = dfmean[fitYVar].unstack()    
+
+    if do_plot:
+        runNo = 1
+        for var in variables:
+            runNo *= df[var].nunique()
+
+        arrange, _ = PlotArangeAndSize(runNo)
+       
+        # Smaller plot sizes for better fit on screen
+        fig_width = arrange[1] * 3.5  
+        fig_height = arrange[0] * 3.0
+       
+        fig, axes = plt.subplots(*arrange,
+                                 figsize=(fig_width, fig_height),
+                                 layout='constrained', squeeze=False,
+                                 sharex=True, sharey=True)
+        axes = axes.flatten()
+       
+    T_list = []
+    T_err_list = []
+   
+    for ii, (ind, item) in enumerate(df.groupby(list(variables))):
+        ax = axes[ii] if do_plot else None
+        if not isinstance(ind, tuple): ind = (ind,)
+
+        # Restored the full return signature
+        res = temperature_fit(params,
+                              item[fitYVar]*1e-6,
+                              item[fitXVar]*1e-3,
+                              do_plot=do_plot, ax=ax)
+       
+        # Unpack: tof_array, times_fit, widths_fit, popt, pcov, perr
+        popt, perr = res[3], res[5]
+       
+        T_list.append(popt[1])
+        T_err_list.append(perr[1])
+       
+        if do_plot and add_Text:
+            label_text = "\n".join([f"{var} = {val:.2f}" for var, val in zip(variables, ind)])
+            ax.text(0.05, 0.95, label_text, ha='left', va='top',
+                    transform=ax.transAxes, fontsize=9,
+                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+
+    # Prepare data for PSD and Error Propagation
+    df1['T (K)'] = T_list
+    df1['T error (K)'] = T_err_list
+   
+    # Filter for minimum TOF values
+    df2_mean = dfmean.reset_index(level=fitXVar)
+    df2_mean = df2_mean[df2_mean[fitXVar] == df2_mean[fitXVar].min()]
+   
+    df2_std = dfstd.reset_index(level=fitXVar)
+    df2_std = df2_std[df2_std[fitXVar] == df2_std[fitXVar].min()]
+   
+    # Value assignment
+    N, T = df2_mean[atomNum], df1['T (K)']
+    s1 = df2_mean[sigma1] * 2**0.5 / 1e6
+    s2 = df2_mean[sigma2] / 1e6
+    s3 = df2_mean[sigma3] / 1e6
+   
+    # Error assignment (using std at min TOF)
+    dN, dT = df2_std[atomNum], df1['T error (K)']
+    ds1 = df2_std[sigma1] * 2**0.5 / 1e6
+    ds2 = df2_std[sigma2] / 1e6
+    ds3 = df2_std[sigma3] / 1e6
+   
+    # PSD Calculation
+    psd_values = PhaseSpaceDensity(N, s1, s2, s3, T)
+    df1['PSD'] = psd_values
+   
+    # Error Propagation Formula for PSD
+    # rel_err = sqrt( (dN/N)^2 + (ds1/s1)^2 + (ds2/s2)^2 + (ds3/s3)^2 + (1.5 * dT/T)^2 )
+    rel_err_sq = (dN/N)**2 + (ds1/s1)**2 + (ds2/s2)**2 + (ds3/s3)^2 + (1.5 * dT/T)**2
+    df1['PSD error'] = psd_values * np.sqrt(rel_err_sq)
+
+    df1['AtomNum'] = N
+    df1['Size1'] = s1
+    df1['Size2'] = s2
+
+    return df1
+
     
 def PhaseSpaceDensity(atomNum, sigma1, sigma2, sigma3, T):
     waveLengthCubed = constants.h**3 / (2 * np.pi * 9.9883414e-27 * constants.k * T)**1.5

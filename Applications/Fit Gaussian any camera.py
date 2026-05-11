@@ -16,12 +16,12 @@ plt.close('all')
 
 dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
 # dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '4/19/2026'
+date = '5/1/2026'
 
 camera = 'Basler'
 # powr = [15,30,40,50,60,70]
-powr = [2, 2.5, 3, 3.5, 4, 4.5, 5]
-# powr = [15]
+# powr = [2, 2.5, 3, 3.5, 4, 4.5, 5]
+powr = [15]
 # camera = 'Andor'
 data_folder = [
     ]
@@ -44,10 +44,11 @@ for p in powr:
     # data_folder.append(fr'{camera}/Focus 175lens BSPM 179.3 mm power {p}')
     # data_folder.append(fr'{camera}/Focus 175lens BSPM 185 mm power {p}')
     
-    data_folder.append(fr'{camera}/First order prop BSPM 145 mm power {p}')
-    data_folder.append(fr'{camera}/First order prop BSPM 286 mm power {p}')
-    data_folder.append(fr'{camera}/First order prop BSPM 409 mm power {p}')
-    data_folder.append(fr'{camera}/First order prop BSPM 531 mm power {p}')
+    # data_folder.append(fr'{camera}/First order prop BSPM 145 mm power {p}')
+    # data_folder.append(fr'{camera}/First order prop BSPM 286 mm power {p}')
+    # data_folder.append(fr'{camera}/First order prop BSPM 409 mm power {p}')
+    # data_folder.append(fr'{camera}/First order prop BSPM 531 mm power {p}')
+    data_folder.append(fr'{camera}/Test 100 mm power {p}')
 
     
 
@@ -57,7 +58,7 @@ commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'
 
-doPlot = 0
+doPlot = 1
 angle = 0
 
 # rowstart=720
