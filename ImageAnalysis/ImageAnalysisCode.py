@@ -2344,7 +2344,7 @@ def plotImgAndFitResult(imgs, popts, bgs=[], imgs2=None,
         
     if uniformscale:
         # vmax = imgShow.max()
-        vmax = 1
+        vmax = uniformscale
     else:
         vmax = None
         
@@ -3443,7 +3443,7 @@ def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
    
     # Error Propagation Formula for PSD
     # rel_err = sqrt( (dN/N)^2 + (ds1/s1)^2 + (ds2/s2)^2 + (ds3/s3)^2 + (1.5 * dT/T)^2 )
-    rel_err_sq = (dN/N)**2 + (ds1/s1)**2 + (ds2/s2)**2 + (ds3/s3)^2 + (1.5 * dT/T)**2
+    rel_err_sq = (dN/N)**2 + (ds1/s1)**2 + (ds2/s2)**2 + (ds3/s3)**2 + (1.5 * dT/T)**2
     df1['PSD error'] = psd_values * np.sqrt(rel_err_sq)
 
     df1['AtomNum'] = N
@@ -3578,6 +3578,7 @@ def Plot_2Dscan_Errbars(df, scanVar1, scanVar2, dependentVar, depVarScale=1):
     ax.set_ylabel(dependentVar)
     # ax.legend(loc='upper right')
     ax.legend()
+    ax.grid(True,alpha=0.3)
 
 
 def FilterDataframe(df, col1, threshold, col2=None):
@@ -3831,7 +3832,7 @@ def FitGaussian(gaussImageFile, graph=True, graphOption='Wide'):
                                        paramY[0]-1, 
                                        paramY[0]+1])
         else:
-            ax[0].imshow(beam*-1,cmap='binary')
+            # ax[0].imshow(beam*-1,cmap='binary')
             ax[0].imshow(beam,cmap='jet')
         
         ax[0].set_title('Image')        
@@ -3913,6 +3914,7 @@ def RecognizeCommonPhrase(dataPathList, repetition):
         distances.extend([distance] * repetition)
     
     return conditions, values, distances
+
 
 def multi_gaussian(x, *params):
     # params = [A1, mu1, sigma1, A2, mu2, sigma2, ...]

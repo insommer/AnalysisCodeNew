@@ -14,43 +14,19 @@ import cv2
 
 plt.close('all')
 
-dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-# dataRootFolder = r'C:/Users/wmmax/Documents/Lehigh/Sommer Group/Experiment Data'
-date = '5/1/2026'
+dataRootFolder = r"D:\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
+
+date = '8/10/2026'
 
 camera = 'Basler'
-# powr = [15,30,40,50,60,70]
-# powr = [2, 2.5, 3, 3.5, 4, 4.5, 5]
-powr = [15]
-# camera = 'Andor'
+
 data_folder = [
+    # fr'{camera}/CATauxBeamInitial_with100mmLens',
+    fr'{camera}/CATauxBeamInitial_with100mmLens_117.5 mm'
+    # fr'{camera}/LogPDpath 331 mm',
+    # fr'{camera}/LogPDpath 349 mm',
+    # fr'{camera}/LogPDpath 389 mm',
     ]
-
-for p in powr:
-    # data_folder.append(fr'{camera}/Last telescope attempt pos1 111.8 mm power {p}')
-    # data_folder.append(fr'{camera}/Last telescope attempt pos1 227.8 mm power {p}')
-    # data_folder.append(fr'{camera}/Last telescope attempt pos1 389.8 mm power {p}')
-    # data_folder.append(fr'{camera}/Last telescope attempt pos1 498.8 mm power {p}')
-    # data_folder.append(fr'{camera}/First order after AOM BSPM 402 mm power {p}')
-    # data_folder.append(fr'{camera}/First order after AOM BSPM 545 mm power {p}')
-    # data_folder.append(fr'{camera}/First order after AOM BSPM 707 mm power {p}')
-    # data_folder.append(fr'{camera}/Lens Shifted back maybe 8 mm power {p}')
-    
-    # data_folder.append(fr'{camera}/Focus 175lens BSPM 152 mm power {p}')
-    # data_folder.append(fr'{camera}/Focus 175lens BSPM 159.1 mm power {p}')
-    # data_folder.append(fr'{camera}/Focus 175lens BSPM 166.7 mm power {p}')
-    # data_folder.append(fr'{camera}/Focus 175lens BSPM 171.6 mm power {p}')
-    # data_folder.append(fr'{camera}/Focus 175lens BSPM 175.4 mm power {p}')
-    # data_folder.append(fr'{camera}/Focus 175lens BSPM 179.3 mm power {p}')
-    # data_folder.append(fr'{camera}/Focus 175lens BSPM 185 mm power {p}')
-    
-    # data_folder.append(fr'{camera}/First order prop BSPM 145 mm power {p}')
-    # data_folder.append(fr'{camera}/First order prop BSPM 286 mm power {p}')
-    # data_folder.append(fr'{camera}/First order prop BSPM 409 mm power {p}')
-    # data_folder.append(fr'{camera}/First order prop BSPM 531 mm power {p}')
-    data_folder.append(fr'{camera}/Test 100 mm power {p}')
-
-    
 
 
 repetition = 6
@@ -61,10 +37,7 @@ var2plot = 'Distance'
 doPlot = 1
 angle = 0
 
-# rowstart=720
-# rowend=880
-# columnstart=175
-# columnend=525
+
 rowstart=1
 rowend=-1
 columnstart=1
@@ -82,14 +55,13 @@ elif camera == 'Andor':
     pixSize = 6.5 #um/pix
 #%%
 
-df = pd.DataFrame(columns=['File', 'Condition', 'Power', 'Xcenter', 'Ycenter', 'Xwidth', 'Ywidth', 'Xamp', 'Yamp'])
+df = pd.DataFrame(columns=['File', 'Condition', 'Xcenter', 'Ycenter', 'Xwidth', 'Ywidth', 'Xamp', 'Yamp'])
 
 if commonPhrase:
 
-    conditions, values, distances = ImageAnalysisCode.RecognizeCommonPhrase(dataPath, repetition)
+    conditions, _, distances = ImageAnalysisCode.RecognizeCommonPhrase(dataPath, repetition)
 
     df['Condition'] = conditions
-    df['Power'] = values
     df['Distance'] = distances
     
 #%%
@@ -128,57 +100,26 @@ df['Xwidth'] = Xwidths; df['Ywidth'] = Ywidths
 df['Xamp'] = Xamps; df['Yamp'] = Yamps    
 
 #%%
-
 colsForAnalysis = ['Xwidth', 'Ywidth']
 
-if df['Power'].isna().any():
-    stats = df.groupby(['Distance'])[colsForAnalysis].agg(['mean', 'std']).reset_index()
-    stats.columns = ['Distance'] + ['_'.join(col).strip() for col in stats.columns[1:]]
-else:
-    stats = df.groupby(['Distance', 'Power'])[colsForAnalysis].agg(['mean', 'std']).reset_index()
-    stats.columns = ['Distance', 'Power'] + ['_'.join(col).strip() for col in stats.columns[2:]]
+stats = df.groupby(['Distance'])[colsForAnalysis].agg(['mean', 'std']).reset_index()
+stats.columns = ['Distance'] + ['_'.join(col).strip() for col in stats.columns[1:]]
 
 
 
 #%%
+for col in colsForAnalysis:
+    
+    plt.figure(figsize=(4,3))
+    plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
+    
+    plt.xlabel(quantity)
+    plt.ylabel(col)
+    plt.tight_layout()
+    
+# convert distance and waists to meters
+stats['Distance'] = stats['Distance']*1e-3
+width_cols = [col for col in stats.columns if 'width' in col]
+stats[width_cols] = stats[width_cols] * 1e-6
 
-if stats['Power'].nunique() == 1:
-    
-    for col in colsForAnalysis:
-        
-        plt.figure(figsize=(4,3))
-        
-        # for condition, group in stats.groupby('Power'):
-        #     plt.errorbar(group['Distance'], group[col+'_mean'], group[col+'_std'], fmt='o-', capsize=3, label=condition)
-        plt.errorbar(stats[var2plot], stats[col+'_mean'], stats[col+'_std'], fmt='-o', capsize=3)
-        
-        plt.xlabel(quantity)
-        plt.ylabel(col)
-        # plt.legend(title='Power %')
-        plt.tight_layout()
-        
-    # convert distance and waists to meters
-    stats['Distance'] = stats['Distance']*1e-3
-    width_cols = [col for col in stats.columns if 'width' in col]
-    stats[width_cols] = stats[width_cols] * 1e-6
-    
-    ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
-
-else:
-    scanVar1 = 'Distance'
-    scanVar2 = 'Power'
-    
-    for col in colsForAnalysis:
-        fig,ax = plt.subplots(figsize=(4,3))
-    
-        for val2, group in stats.groupby(scanVar2):
-            ax.errorbar(group[scanVar1], group[col+'_mean'], yerr=group[col+'_std'],
-                        marker='o', label=f'Power={val2:.0f}%', capsize=3)
-    
-        ax.set_xlabel(scanVar1+' (mm)')
-        ax.set_ylabel(col+' (um)')
-        ax.grid(True, alpha=0.3)
-        ax.legend(fontsize=8)
-        plt.tight_layout()
-
-
+ImageAnalysisCode.FitGaussianWaist(stats, colsForAnalysis)
