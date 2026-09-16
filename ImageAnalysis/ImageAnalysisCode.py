@@ -3469,7 +3469,7 @@ def PhaseSpaceDensity_AspectRatio(atomNum, sigmaY, aspectRatio, T):
     
     s1 = sigmaY
     s2 = sigmaY
-    s3 = sigmaY / aspectRatio
+    s3 = sigmaY * 2**0.5  / aspectRatio # account for 45-degree angle, apply aspect ratio
     Vol = 4/3 * np.pi * s1 * s2 * s3
     return waveLengthCubed * atomNum / Vol
     
