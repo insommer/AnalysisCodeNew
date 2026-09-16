@@ -1874,7 +1874,7 @@ def fitSingleGaussian(data, xdata=None, dx=1,
     #     plt.plot(xdata, Gaussian(xdata,*guess))
     
     try:
-        popt, _ = curve_fit(Gaussian, xdata, data, p0 = guess, bounds=([-np.inf, -np.inf, 0, -np.inf],[np.inf]*4) )
+        popt, _ = curve_fit(Gaussian, xdata, data, p0 = guess, bounds=([0, -np.inf, 0, -np.inf],[np.inf]*4) )
         
     except Exception as e:
         print(e)
@@ -3438,7 +3438,9 @@ def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
     ds3 = df2_std[sigma3] / 1e6
    
     # PSD Calculation
-    psd_values = PhaseSpaceDensity(N, s1, s2, s3, T)
+    # psd_values = PhaseSpaceDensity(N, s1, s2, s3, T)
+    aspectRatio = 0.12
+    psd_values = PhaseSpaceDensity_AspectRatio(N, s2, aspectRatio, T)
     df1['PSD'] = psd_values
    
     # Error Propagation Formula for PSD
@@ -3455,8 +3457,23 @@ def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
     
 def PhaseSpaceDensity(atomNum, sigma1, sigma2, sigma3, T):
     waveLengthCubed = constants.h**3 / (2 * np.pi * 9.9883414e-27 * constants.k * T)**1.5
-    return  waveLengthCubed * atomNum / (sigma1 * sigma2 * sigma3 * (2*np.pi)**1.5)
+    
+    # assume ellipsoidal volume in ODT
+    Vol = 4/3 * np.pi * sigma1 * sigma2 * sigma3
+    # return  waveLengthCubed * atomNum / (sigma1 * sigma2 * sigma3 * (2*np.pi)**1.5)
+    return  waveLengthCubed * atomNum / Vol
 
+
+def PhaseSpaceDensity_AspectRatio(atomNum, sigmaY, aspectRatio, T):
+    waveLengthCubed = constants.h**3 / (2 * np.pi * 9.9883414e-27 * constants.k * T)**1.5
+    
+    s1 = sigmaY
+    s2 = sigmaY
+    s3 = sigmaY / aspectRatio
+    Vol = 4/3 * np.pi * s1 * s2 * s3
+    return waveLengthCubed * atomNum / Vol
+    
+    return waveLengthCubed * atomNum / (Vol * (2*np.pi))
    
 def exponential(x, a, tau, c):
     return a * np.exp(-x/tau) + c    
