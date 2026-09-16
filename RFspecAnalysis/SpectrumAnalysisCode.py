@@ -13,12 +13,13 @@ def multi_gaussian(x, *params):
         A = params[3*i]
         mu = params[3*i + 1]
         sigma = params[3*i + 2]
-        y += A * np.exp(-(x - mu)**2 / (2 * sigma**2))
+        offset = params[3*i + 3]
+        y += A * np.exp(-2*(x - mu)**2 / (sigma**2)) + offset
     
     return y
 
 def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, peak_prominence=0.05, sigma_guess=0.05, 
-                  window_length=7, polyorder=2, doPlot=True):
+                  window_length=7, polyorder=2, doPlot=True, atomNumberType='XatomNumber'):
 
     # assumes XatomNumber for analysis
     if isinstance(dataFrame, pd.DataFrame):
@@ -26,13 +27,10 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, peak_prominence=0.05, sigma_gues
     else:
         df = dataFrame['zyla'].sort_values('RF_FRQ_MHz')
     Freq = df['RF_FRQ_MHz'].values
-    Response = df['XatomNumber'].interpolate().values # in case there are nan values
+    Response = df[atomNumberType].interpolate().values # in case there are nan values
 
-<<<<<<< HEAD
-    ResponseSmoothed = savgol_filter(Response, window_length=3, polyorder=2)
-=======
+
     ResponseSmoothed = savgol_filter(Response, window_length=4, polyorder=2)
->>>>>>> bdee12dffc7947dec816955a413b9abe3f288ca5
 
     # Peak detection
     freq_step = np.mean(np.diff(Freq))
@@ -52,7 +50,8 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, peak_prominence=0.05, sigma_gues
     for p in peaks:
         A_guess = Response[peaks].max()
         mu_guess = Freq[p]
-        p0 += [A_guess, mu_guess, sigma_guess]
+        offset_guess = 1e3
+        p0 += [A_guess, mu_guess, sigma_guess, offset_guess]
     p0 = np.array(p0)
 
     popt, pcov = curve_fit(multi_gaussian, Freq, Response, p0=p0)
@@ -104,7 +103,7 @@ def FitRFspectrum(dataFrame, peak_sep_MHz=0.15, peak_prominence=0.05, sigma_gues
     
         plt.legend()
         plt.xlabel('RF_FRQ_MHz')
-        plt.ylabel('XatomNumber')
+        plt.ylabel(atomNumberType)
         plt.tight_layout()
         
     return stats
