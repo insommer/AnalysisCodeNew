@@ -16,16 +16,17 @@ plt.close('all')
 
 dataRootFolder = r"D:\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
 
-date = '8/10/2026'
+date = '8/19/2026'
 
 camera = 'Basler'
 
 data_folder = [
     # fr'{camera}/CATauxBeamInitial_with100mmLens',
-    fr'{camera}/CATauxBeamInitial_with100mmLens_117.5 mm'
+    # fr'{camera}/CATauxBeamInitial_with100mmLens_117.5 mm'
     # fr'{camera}/LogPDpath 331 mm',
     # fr'{camera}/LogPDpath 349 mm',
     # fr'{camera}/LogPDpath 389 mm',
+    fr'{camera}/Cateye y junction output initial 185 mm'
     ]
 
 

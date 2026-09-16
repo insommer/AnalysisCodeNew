@@ -13,8 +13,8 @@ DA = DMDanalysis.DMDanalysis()
 #%%
 
 # dataRootFolder = r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-dataRootFolder = r'F:\Data'
-date = '3/25/2025'
+dataRootFolder = r'D:\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data'
+date = '8/31/2026'
 
 data_folder = [
     # r'Andor/RF spec Load D1 into ODT wait 0 ms_1',
@@ -27,6 +27,8 @@ data_folder = [
     
     # r'Andor/1 ms wait D1 rf spec',
     # r'Andor/2 ms wait D1 rf spec',
+    
+    r'Andor/ODT RF spec wait 500 ms Clock transition_1'
 
     ]
 
@@ -57,13 +59,13 @@ fitbgDeg = 5
 
 # rowstart = 10
 # rowend = -10
-# columnstart = 10
-# columnend = -10
+columnstart = 10
+columnend = -10
 
-rowstart = 300
-rowend = 700
-columnstart=300
-columnend= 1700
+rowstart = 500
+rowend = 1000
+# columnstart=300
+# columnend= 1700
 
 dayfolder = ImageAnalysisCode.GetDataLocation(date, DataPath=dataRootFolder)
 dataPath = [ os.path.join(dayfolder, f) for f in data_folder]
