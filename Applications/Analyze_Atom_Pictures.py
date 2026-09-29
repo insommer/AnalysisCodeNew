@@ -15,14 +15,16 @@ plt.close('all')
 dataRootFolder = r'D:\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data'
 
 
-date = '9/16/2026'
+date = '9/22/2026'
 
 data_folder = [
-    # 'Lin evap_vary time and final V_thermo_2'
-    'Evap linear_vary time and final V_wide scan',
-    'Evap linear_vary time and final V_wide scan_1',
-    'Evap linear_vary time and final V_wide scan_2'
-    # 'Evap linear_vary time and final V_low powers'
+    # 'ODT load from CMOT_no burnt in_1'
+    # 'crossed ODT 3d density vs wait'
+    # 'ODT test spherical lens'
+    # 'ODT vs cam bias no burnt in'
+    # 'CMOT density measurement'
+    
+    'ODT lifetime MF_no burnt in'
 ]
 
 ####################################
@@ -32,6 +34,8 @@ cameras = [
     'zyla',
     # 'chameleon'
 ]
+
+cloudType = 'ODT'
 
 reanalyze = 1
 saveresults = 0
@@ -51,7 +55,7 @@ runParams = {
     'ROI': [
         # rowStart, rowEnd, colStart, colEnd, for each camera
         # [500, 1000, 100, -100], 
-        [500, 1000, 500, -200], 
+        [500, 1000, 100, -100], 
         # [10, -10, 10, -10],
         [10, -10, 10, -10],
         # [420, 520, 700, 1000],        
@@ -139,7 +143,10 @@ for cam in cameras:
 
     results[cam] = ImageAnalysisCode.AnalyseFittingResults(fits[cam][0], logTime=varLog[cam].index)
     results[cam] = results[cam].join(varLog[cam])
-
+    
+    # add calculation for 3D atom density in cm-3
+    results[cam] = ImageAnalysisCode.AtomDensity_AddToDF(results[cam], cloudType=cloudType)
+    
     if saveresults:
         ImageAnalysisCode.SaveResultsDftoEachFolder(results[cam], overwrite=overwriteOldResults)    
 
@@ -165,26 +172,27 @@ for cam in cameras:
 
 for cam in cameras:
     
-    # ImageAnalysisCode.PlotResults(results[cam], 'TOF', 'Xwidth',
-    #                               filterLists=filterLists,
-    #                               # iterateVariable='VerticalBiasCurrent', 
-    #                               # groupby='ODT_Position', 
-    #                                 groupbyX=1, 
-    #                               threeD=0,
-    #                               figSize = 0.5
-    #                               )    
-    
     # ImageAnalysisCode.PlotResults(results[cam], 'TOF', 'Ywidth',
-    #                               filterLists=filterLists,
+    #                               # filterLists=filterLists,
+    #                               # iterateVariable='VerticalBiasCurrent', 
+    #                               # groupby='ODT_Position', 
+    #                                 groupbyX=1, 
+    #                               threeD=0,
+    #                               figSize = 0.5
+    #                               )  
+    
+    # ImageAnalysisCode.PlotResults(results[cam], 'TOF', 'Xwidth',
+    #                               # filterLists=[['Xwidth>60']],
     #                               # iterateVariable='VerticalBiasCurrent', 
     #                               # groupby='ODT_Position', 
     #                                 groupbyX=1, 
     #                               threeD=0,
     #                               figSize = 0.5
     #                               )    
+      
     
-    # ImageAnalysisCode.PlotResults(results[cam], 'RF_FRQ_MHz', 'YatomNumber',
-    #                               filterLists=filterLists,
+    # ImageAnalysisCode.PlotResults(results[cam], 'TOF', 'Density cm3',
+    #                               # filterLists=[['Xwidth>60']],
     #                               # iterateVariable='VerticalBiasCurrent', 
     #                               # groupby='ODT_Position', 
     #                                 groupbyX=1, 
@@ -240,8 +248,6 @@ for cam in cameras:
                             # 'YatomNumber'
                             # 'MOT_VCO'
                             # 'F0.5pump_voltage'
-                            'IR_LinFinal_W',
-                            'EvapTime_Lin'
                           ]
     showTimestamp = False
     textY = 1
@@ -268,65 +274,51 @@ for cam in cameras:
                                               sharey='col'
                                              )
 
+
 #%% GENERAL 2D SCAN FIGURE
 
-filterLists = [['TOF==0']]
-fltedData = ImageAnalysisCode.DataFilter(results['zyla'], filterLists=filterLists)
-
-
-
-scanVar1 = 'IR_LinFinal_W'
-scanVar2 = 'EvapTime_Lin'
-
+scanVar1 = 'wait'
+scanVar2 = 'CamBiasCurrent'
 
 dependentVar = 'YatomNumber'
-ImageAnalysisCode.Plot_2Dscan_Errbars(fltedData, scanVar1, scanVar2, dependentVar)
+ImageAnalysisCode.Plot_2Dscan_Errbars(results['zyla'], scanVar1, scanVar2, dependentVar)
 plt.tight_layout()
-
-dependentVar = 'Ywidth'
-ImageAnalysisCode.Plot_2Dscan_Errbars(fltedData, scanVar1, scanVar2, dependentVar)
-plt.tight_layout()
-
-dependentVar = 'Xwidth'
-ImageAnalysisCode.Plot_2Dscan_Errbars(fltedData, scanVar1, scanVar2, dependentVar)
-plt.tight_layout()
-
 
 # %% THERMOMETRY
 
 # filterLists = [['LowServo1>0.6'], ['LowServo1==0.6','TOF<1.5'], ['LowServo1==0.5', 'TOF<0.9']]
-filterLists = [['TOF<0.6']]
-fltedData = ImageAnalysisCode.DataFilter(results['zyla'], filterLists=filterLists)
+# filterLists = [['TOF<0.6']]
+# fltedData = ImageAnalysisCode.DataFilter(results['zyla'], filterLists=filterLists)
 
 
-var1 = 'IR_LinFinal_W'
-var2 = 'EvapTime_Lin'
+# var1 = 'IR_LinFinal_W'
+# var2 = 'EvapTime_Lin'
 
-fitYVar = 'Ywidth'
+# fitYVar = 'Ywidth'
 
-df1 = ImageAnalysisCode.multiVariableThermometry_v2(
-                                            # results['zyla'], 
-                                            fltedData,
-                                            var1, 
-                                            var2, 
-                                            fitXVar='TOF',
-                                            fitYVar=fitYVar,
-                                            do_plot=1, add_Text=1)
+# df1 = ImageAnalysisCode.multiVariableThermometry_v2(
+#                                             # results['zyla'], 
+#                                             fltedData,
+#                                             var1, 
+#                                             var2, 
+#                                             fitXVar='TOF',
+#                                             fitYVar=fitYVar,
+#                                             do_plot=1, add_Text=1)
 
-df1 = df1.reset_index()
+# df1 = df1.reset_index()
 
-# df1 = df1[df1['T (K)'] > 1e-7]
+# # df1 = df1[df1['T (K)'] > 1e-7]
 
-plt.figure(figsize=(5,4))
-for val2, group in df1.groupby(var2):
-    plt.errorbar(group[var1], group['T (K)']*1e6, yerr=group['T error (K)']*1e6,
-                 marker='o', label=f'{var2}={val2:.2f}', capsize=3)
+# plt.figure(figsize=(5,4))
+# for val2, group in df1.groupby(var2):
+#     plt.errorbar(group[var1], group['T (K)']*1e6, yerr=group['T error (K)']*1e6,
+#                  marker='o', label=f'{var2}={val2:.2f}', capsize=3)
 
-plt.xlabel(var1)
-plt.ylabel('T ($\mu$K)')
-plt.legend()
-plt.tight_layout()
-plt.grid(True, alpha=0.3)
+# plt.xlabel(var1)
+# plt.ylabel('T ($\mu$K)')
+# plt.legend()
+# plt.tight_layout()
+# plt.grid(True, alpha=0.3)
 
 # plt.figure(figsize=(5,4))
 # plt.plot(df1[var1], df1['T (K)']*1e6, '-o')
@@ -334,32 +326,17 @@ plt.grid(True, alpha=0.3)
 # plt.title('T measured using '+ fitYVar)
 # plt.tight_layout()
 
-#%%
-fig, ax = plt.subplots(1,2,figsize=(10,4))
-
-for val2, group in df1.groupby(var2):
-   
-    ax[0].errorbar(group[var1], group['T (K)']*1e6, yerr=group['T error (K)']*1e6,
-                 marker='o', label=f'{var2}={val2:.2f}', capsize=3)
-   
-    ax[1].plot(group[var1], group['PSD'], '-o', label=f'{var2}={val2:.2f}')
-
-ax[0].set_xlabel(var1); ax[1].set_xlabel(var1)
-
-ax[0].set_ylabel('Temp ($\mu$K)')
-ax[1].set_ylabel('PSD')
-ax[0].legend()
-plt.tight_layout()
-
 
 # %% LIFETIME MEASUREMENT
-# for cam in cameras:
-#     popt,_ = ImageAnalysisCode.fit_exponential(results[cam]['wait'], results[cam]['YatomNumber'],
-#         dx=1, doplot = True, label="", title="Trap Lifetime", newfig=True, xlabel="wait (s)", ylabel="Y Atom Number", 
-#         offset = 0, 
-#         legend=True)
 
-#     print('Lifetime: ', round(popt[1]/10**(3), 3), ' s')
+filterLists = [['wait>800']]
+fltedData = ImageAnalysisCode.DataFilter(results['zyla'], filterLists=filterLists)
+
+
+popt, _ = ImageAnalysisCode.fit_exponential_v2(
+    fltedData,
+    # results['zyla'],
+    timeVar='wait', atomNumVar='YatomNumber', offset=None, doPlot=1)
 
 #%% Save results dataframe?
 
