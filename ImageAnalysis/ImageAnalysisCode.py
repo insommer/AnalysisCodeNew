@@ -3358,102 +3358,6 @@ def multiVariableThermometry(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
 
     return df1
 
-def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
-                             atomNum='YatomNumber', sigma1='Xwidth', sigma2='Ywidth', sigma3='Ywidth',
-                             do_plot=1, add_Text=1):
-   
-    params = ExperimentParams(t_exp=10e-6, picturesPerIteration=4, cam_type="zyla")
-   
-    # Calculate means and standard deviations for error propagation
-    df_numeric = df.select_dtypes(include=np.number)
-    grouped = df_numeric.groupby(list(variables) + [fitXVar])
-    dfmean = grouped.mean()
-    dfstd = grouped.std()
-   
-    df1 = dfmean[fitYVar].unstack()    
-
-    if do_plot:
-        runNo = 1
-        for var in variables:
-            runNo *= df[var].nunique()
-
-        arrange, _ = PlotArangeAndSize(runNo)
-       
-        # Smaller plot sizes for better fit on screen
-        fig_width = arrange[1] * 3.5  
-        fig_height = arrange[0] * 3.0
-       
-        fig, axes = plt.subplots(*arrange,
-                                 figsize=(fig_width, fig_height),
-                                 layout='constrained', squeeze=False,
-                                 sharex=True, sharey=True)
-        axes = axes.flatten()
-       
-    T_list = []
-    T_err_list = []
-   
-    for ii, (ind, item) in enumerate(df.groupby(list(variables))):
-        ax = axes[ii] if do_plot else None
-        if not isinstance(ind, tuple): ind = (ind,)
-
-        # Restored the full return signature
-        res = temperature_fit(params,
-                              item[fitYVar]*1e-6,
-                              item[fitXVar]*1e-3,
-                              do_plot=do_plot, ax=ax)
-       
-        # Unpack: tof_array, times_fit, widths_fit, popt, pcov, perr
-        popt, perr = res[3], res[5]
-       
-        T_list.append(popt[1])
-        T_err_list.append(perr[1])
-       
-        if do_plot and add_Text:
-            label_text = "\n".join([f"{var} = {val:.2f}" for var, val in zip(variables, ind)])
-            ax.text(0.05, 0.95, label_text, ha='left', va='top',
-                    transform=ax.transAxes, fontsize=9,
-                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
-
-    # Prepare data for PSD and Error Propagation
-    df1['T (K)'] = T_list
-    df1['T error (K)'] = T_err_list
-   
-    # Filter for minimum TOF values
-    df2_mean = dfmean.reset_index(level=fitXVar)
-    df2_mean = df2_mean[df2_mean[fitXVar] == df2_mean[fitXVar].min()]
-   
-    df2_std = dfstd.reset_index(level=fitXVar)
-    df2_std = df2_std[df2_std[fitXVar] == df2_std[fitXVar].min()]
-   
-    # Value assignment
-    N, T = df2_mean[atomNum], df1['T (K)']
-    s1 = df2_mean[sigma1] * 2**0.5 / 1e6
-    s2 = df2_mean[sigma2] / 1e6
-    s3 = df2_mean[sigma3] / 1e6
-   
-    # Error assignment (using std at min TOF)
-    dN, dT = df2_std[atomNum], df1['T error (K)']
-    ds1 = df2_std[sigma1] * 2**0.5 / 1e6
-    ds2 = df2_std[sigma2] / 1e6
-    ds3 = df2_std[sigma3] / 1e6
-   
-    # PSD Calculation
-    # psd_values = PhaseSpaceDensity(N, s1, s2, s3, T)
-    aspectRatio = 0.12
-    psd_values = PhaseSpaceDensity_AspectRatio(N, s2, aspectRatio, T)
-    df1['PSD'] = psd_values
-   
-    # Error Propagation Formula for PSD
-    # rel_err = sqrt( (dN/N)^2 + (ds1/s1)^2 + (ds2/s2)^2 + (ds3/s3)^2 + (1.5 * dT/T)^2 )
-    rel_err_sq = (dN/N)**2 + (ds1/s1)**2 + (ds2/s2)**2 + (ds3/s3)**2 + (1.5 * dT/T)**2
-    df1['PSD error'] = psd_values * np.sqrt(rel_err_sq)
-
-    df1['AtomNum'] = N
-    df1['Size1'] = s1
-    df1['Size2'] = s2
-
-    return df1
-
     
 def PhaseSpaceDensity(atomNum, sigma1, sigma2, sigma3, T):
     waveLengthCubed = constants.h**3 / (2 * np.pi * 9.9883414e-27 * constants.k * T)**1.5
@@ -3464,17 +3368,8 @@ def PhaseSpaceDensity(atomNum, sigma1, sigma2, sigma3, T):
     return  waveLengthCubed * atomNum / Vol
 
 
-def PhaseSpaceDensity_AspectRatio(atomNum, sigmaY, aspectRatio, T):
-    waveLengthCubed = constants.h**3 / (2 * np.pi * 9.9883414e-27 * constants.k * T)**1.5
-    
-    s1 = sigmaY
-    s2 = sigmaY
-    s3 = sigmaY * 2**0.5  / aspectRatio # account for 45-degree angle, apply aspect ratio
-    Vol = 4/3 * np.pi * s1 * s2 * s3
-    return waveLengthCubed * atomNum / Vol
-    
-    return waveLengthCubed * atomNum / (Vol * (2*np.pi))
-   
+
+
 def exponential(x, a, tau, c):
     return a * np.exp(-x/tau) + c    
 
@@ -3576,98 +3471,6 @@ def Plot_2Dscan(df, scanVar1, scanVar2, dependentVar):
     ax.set_xlabel(scanVar1)
     ax.set_ylabel(dependentVar)
     ax.legend()
-
-def Plot_2Dscan_Errbars(df, scanVar1, scanVar2, dependentVar, depVarScale=1):
-    '''
-    Description
-    -----------
-    Plots with error bars the dependentVar vs scanVar1 for each value of scanVar2 given
-    '''
-    fig,ax = plt.subplots(figsize=(6,5))
-   
-    stats = df.groupby([scanVar1, scanVar2])[dependentVar].agg(['mean','std']).reset_index()
-   
-    for val2, group in stats.groupby(scanVar2):
-        ax.errorbar(group[scanVar1], group['mean']*depVarScale, yerr=group['std'],
-                    marker='o', label=f'{scanVar2}={val2:.2f}', capsize=3)
-   
-    ax.set_xlabel(scanVar1)
-    ax.set_ylabel(dependentVar)
-    # ax.legend(loc='upper right')
-    ax.legend()
-    ax.grid(True,alpha=0.3)
-
-
-def FilterDataframe(df, col1, threshold, col2=None):
-    
-    condition = np.abs(df[col1]) <= threshold
-    
-    if col2 is not None:
-        condition = condition & (df[col2] <= threshold)
-    
-    return df[condition]
-
-
-# def saveResultsDF(results, dayfolder):
-    
-#     parentPath = os.path.join(dayfolder, 'Andor')
-    
-#     for folder_name, subDF in results['zyla'].groupby('Folder'):
-#         pkl_path = os.path.join(parentPath, folder_name, 'results.pkl')
-#         subDF.to_pickle(pkl_path)
-
-
-def saveResultsDF(df, dayfolder, save_pickle=False, save_csv=True):
-    """
-    Saves each folder's subset of a DataFrame into its folder,
-    asks user before saving or overwriting.
-    """
-    
-    parentPath = os.path.join(dayfolder, 'Andor')
-
-    for folder_name, subDF in df.groupby('Folder'):
-
-        # Ask if results should be saved
-        print(f"\nFolder: {folder_name}")
-        choice = input("Do you want to save results for this folder? (y/n): ").strip().lower()
-
-        if choice != "y":
-            print("Skipping...")
-            continue
-
-        # Make sure the folder exists
-        os.makedirs(folder_name, exist_ok=True)
-
-        # PICKLE
-        if save_pickle:
-            pkl_path = os.path.join(parentPath, folder_name, "results.pkl")
-
-            # Check if file exists
-            if os.path.exists(pkl_path):
-                overwrite = input(f"{pkl_path} already exists. Overwrite? (y/n): ").strip().lower()
-                if overwrite != "y":
-                    print("Not overwriting.")
-                else:
-                    subDF.to_pickle(pkl_path)
-                    print(f"Saved: {pkl_path}")
-            else:
-                subDF.to_pickle(pkl_path)
-                print(f"Saved: {pkl_path}")
-
-        # CSV
-        if save_csv:
-            csv_path = os.path.join(parentPath, folder_name, "results.csv")
-
-            if os.path.exists(csv_path):
-                overwrite = input(f"{csv_path} already exists. Overwrite? (y/n): ").strip().lower()
-                if overwrite != "y":
-                    print("Not overwriting.")
-                else:
-                    subDF.to_csv(csv_path, index=False)
-                    print(f"Saved: {csv_path}")
-            else:
-                subDF.to_csv(csv_path, index=False)
-                print(f"Saved: {csv_path}")
 
 #%% Maximilliano
 from PIL import Image
@@ -3955,3 +3758,299 @@ def GetSlices(ImageArray):
     horizSlice = ImageArray[max_x, :]
     
     return horizSlice, vertSlice
+
+
+
+def Plot_2Dscan_Errbars(df, scanVar1, scanVar2, dependentVar, depVarScale=1):
+    '''
+    Description
+    -----------
+    Plots with error bars the dependentVar vs scanVar1 for each value of scanVar2 given
+    '''
+    fig,ax = plt.subplots(figsize=(6,5))
+   
+    stats = df.groupby([scanVar1, scanVar2])[dependentVar].agg(['mean','std']).reset_index()
+   
+    for val2, group in stats.groupby(scanVar2):
+        ax.errorbar(group[scanVar1], group['mean']*depVarScale, yerr=group['std'],
+                    marker='o', label=f'{scanVar2}={val2:.2f}', capsize=3)
+   
+    ax.set_xlabel(scanVar1)
+    ax.set_ylabel(dependentVar)
+    # ax.legend(loc='upper right')
+    ax.legend()
+    ax.grid(True,alpha=0.3)
+
+
+def FilterDataframe(df, col1, threshold, col2=None):
+    
+    condition = np.abs(df[col1]) <= threshold
+    
+    if col2 is not None:
+        condition = condition & (df[col2] <= threshold)
+    
+    return df[condition]
+
+
+# def saveResultsDF(results, dayfolder):
+    
+#     parentPath = os.path.join(dayfolder, 'Andor')
+    
+#     for folder_name, subDF in results['zyla'].groupby('Folder'):
+#         pkl_path = os.path.join(parentPath, folder_name, 'results.pkl')
+#         subDF.to_pickle(pkl_path)
+
+
+def saveResultsDF(df, dayfolder, save_pickle=False, save_csv=True):
+    """
+    Saves each folder's subset of a DataFrame into its folder,
+    asks user before saving or overwriting.
+    """
+    
+    parentPath = os.path.join(dayfolder, 'Andor')
+
+    for folder_name, subDF in df.groupby('Folder'):
+
+        # Ask if results should be saved
+        print(f"\nFolder: {folder_name}")
+        choice = input("Do you want to save results for this folder? (y/n): ").strip().lower()
+
+        if choice != "y":
+            print("Skipping...")
+            continue
+
+        # Make sure the folder exists
+        os.makedirs(folder_name, exist_ok=True)
+
+        # PICKLE
+        if save_pickle:
+            pkl_path = os.path.join(parentPath, folder_name, "results.pkl")
+
+            # Check if file exists
+            if os.path.exists(pkl_path):
+                overwrite = input(f"{pkl_path} already exists. Overwrite? (y/n): ").strip().lower()
+                if overwrite != "y":
+                    print("Not overwriting.")
+                else:
+                    subDF.to_pickle(pkl_path)
+                    print(f"Saved: {pkl_path}")
+            else:
+                subDF.to_pickle(pkl_path)
+                print(f"Saved: {pkl_path}")
+
+        # CSV
+        if save_csv:
+            csv_path = os.path.join(parentPath, folder_name, "results.csv")
+
+            if os.path.exists(csv_path):
+                overwrite = input(f"{csv_path} already exists. Overwrite? (y/n): ").strip().lower()
+                if overwrite != "y":
+                    print("Not overwriting.")
+                else:
+                    subDF.to_csv(csv_path, index=False)
+                    print(f"Saved: {csv_path}")
+            else:
+                subDF.to_csv(csv_path, index=False)
+                print(f"Saved: {csv_path}")
+                
+                
+
+def PhaseSpaceDensity_AspectRatio(atomNum, sigmaY, aspectRatio, T):
+    waveLengthCubed = constants.h**3 / (2 * np.pi * 9.9883414e-27 * constants.k * T)**1.5
+    
+    s1 = sigmaY
+    s2 = sigmaY
+    s3 = sigmaY * 2**0.5  / aspectRatio # account for 45-degree angle, apply aspect ratio
+    Vol = 4/3 * np.pi * s1 * s2 * s3
+    return waveLengthCubed * atomNum / Vol
+    
+    return waveLengthCubed * atomNum / (Vol * (2*np.pi))
+
+
+def AtomDensity3D_Ellipsoid(atomNum, width1, width2, widthUnit='um'):
+    '''
+
+    Parameters
+    ----------
+    atomNum : TYPE
+        DESCRIPTION.
+    width1 : apply this width once, e.g. Xwidth in for the ODT
+    width2 : apply this width twice for hidden dimension, e.g. Ywidth for ODT
+
+    Returns
+    -------
+    n_cm3 : TYPE
+        DESCRIPTION.
+    '''
+    
+    if widthUnit == 'um':
+        width1 = width1 * 1e-6
+        width2 = width2 * 1e-6
+    
+    vol = 4/3 * np.pi * width1 * width2 * width2
+    n = atomNum / vol
+    n_cm3 = n / 1e6 # density in cubic cm
+    return n_cm3
+   
+
+
+def AtomDensity_AddToDF(df, cloudType='ODT'):
+    
+    Xwidth = df['Xwidth'] * 1e-6
+    Ywidth = df['Ywidth'] * 1e-6
+    AtomNum = df['YatomNumber']
+    
+    if cloudType == 'ODT':
+        width1 = Xwidth
+        width2 = Ywidth
+    else:
+        width1 = Ywidth
+        width2 = Xwidth
+    
+    n = AtomDensity3D_Ellipsoid(AtomNum, width1, width2, widthUnit='m')
+    
+    df_new = pd.concat([df, n], axis=1)
+    df_new = df_new.rename(columns={0:'Density cm3'})
+    
+    return df_new
+
+
+
+def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
+                             atomNum='YatomNumber', sigma1='Xwidth', sigma2='Ywidth', sigma3='Ywidth',
+                             do_plot=1, add_Text=1):
+   
+    params = ExperimentParams(t_exp=10e-6, picturesPerIteration=4, cam_type="zyla")
+   
+    # Calculate means and standard deviations for error propagation
+    df_numeric = df.select_dtypes(include=np.number)
+    grouped = df_numeric.groupby(list(variables) + [fitXVar])
+    dfmean = grouped.mean()
+    dfstd = grouped.std()
+   
+    df1 = dfmean[fitYVar].unstack()    
+
+    if do_plot:
+        runNo = 1
+        for var in variables:
+            runNo *= df[var].nunique()
+
+        arrange, _ = PlotArangeAndSize(runNo)
+       
+        # Smaller plot sizes for better fit on screen
+        fig_width = arrange[1] * 3.5  
+        fig_height = arrange[0] * 3.0
+       
+        fig, axes = plt.subplots(*arrange,
+                                 figsize=(fig_width, fig_height),
+                                 layout='constrained', squeeze=False,
+                                 sharex=True, sharey=True)
+        axes = axes.flatten()
+       
+    T_list = []
+    T_err_list = []
+   
+    for ii, (ind, item) in enumerate(df.groupby(list(variables))):
+        ax = axes[ii] if do_plot else None
+        if not isinstance(ind, tuple): ind = (ind,)
+
+        # Restored the full return signature
+        res = temperature_fit(params,
+                              item[fitYVar]*1e-6,
+                              item[fitXVar]*1e-3,
+                              do_plot=do_plot, ax=ax)
+       
+        # Unpack: tof_array, times_fit, widths_fit, popt, pcov, perr
+        popt, perr = res[3], res[5]
+       
+        T_list.append(popt[1])
+        T_err_list.append(perr[1])
+       
+        if do_plot and add_Text:
+            label_text = "\n".join([f"{var} = {val:.2f}" for var, val in zip(variables, ind)])
+            ax.text(0.05, 0.95, label_text, ha='left', va='top',
+                    transform=ax.transAxes, fontsize=9,
+                    bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
+
+    # Prepare data for PSD and Error Propagation
+    df1['T (K)'] = T_list
+    df1['T error (K)'] = T_err_list
+   
+    # Filter for minimum TOF values
+    df2_mean = dfmean.reset_index(level=fitXVar)
+    df2_mean = df2_mean[df2_mean[fitXVar] == df2_mean[fitXVar].min()]
+   
+    df2_std = dfstd.reset_index(level=fitXVar)
+    df2_std = df2_std[df2_std[fitXVar] == df2_std[fitXVar].min()]
+   
+    # Value assignment
+    N, T = df2_mean[atomNum], df1['T (K)']
+    s1 = df2_mean[sigma1] * 2**0.5 / 1e6
+    s2 = df2_mean[sigma2] / 1e6
+    s3 = df2_mean[sigma3] / 1e6
+   
+    # Error assignment (using std at min TOF)
+    dN, dT = df2_std[atomNum], df1['T error (K)']
+    ds1 = df2_std[sigma1] * 2**0.5 / 1e6
+    ds2 = df2_std[sigma2] / 1e6
+    ds3 = df2_std[sigma3] / 1e6
+   
+    # PSD Calculation
+    # psd_values = PhaseSpaceDensity(N, s1, s2, s3, T)
+    aspectRatio = 0.12
+    psd_values = PhaseSpaceDensity_AspectRatio(N, s2, aspectRatio, T)
+    df1['PSD'] = psd_values
+   
+    # Error Propagation Formula for PSD
+    # rel_err = sqrt( (dN/N)^2 + (ds1/s1)^2 + (ds2/s2)^2 + (ds3/s3)^2 + (1.5 * dT/T)^2 )
+    rel_err_sq = (dN/N)**2 + (ds1/s1)**2 + (ds2/s2)**2 + (ds3/s3)**2 + (1.5 * dT/T)**2
+    df1['PSD error'] = psd_values * np.sqrt(rel_err_sq)
+
+    df1['AtomNum'] = N
+    df1['Size1'] = s1
+    df1['Size2'] = s2
+
+    return df1
+
+
+
+
+def fit_exponential_v2(df, timeVar='wait', atomNumVar='YatomNumber', offset=None, doPlot=1):
+    
+    atomNum_avg = df.groupby(timeVar)[atomNumVar].mean().reset_index()[atomNumVar]
+    atomNum_std = df.groupby(timeVar)[atomNumVar].std().reset_index()[atomNumVar]
+    
+    time = df.groupby(timeVar)[atomNumVar].mean().reset_index()[timeVar]
+
+    #fit for the parameters a , b, c
+    A = max(atomNum_avg) - min(atomNum_avg)
+    Tau = (max(time)-min(time))/2
+    C = min(atomNum_avg)
+    xfit = np.linspace(min(time),max(time), 5000)
+    
+    if offset is not None:
+        func = exponential
+        guess= [A, Tau, C]
+        label = 'fit: a=%5.3f, tau=%5.3f, c=%5.3f'
+    else:
+        func = lambda x,a,tau: exponential(x,a,tau,0)
+        guess = [A, Tau]
+        label = ' A=%5.2e\n$ \\tau$=%5.3e\n C=0 (Fixed)'
+        
+    popt, pcov = curve_fit(func, time, atomNum_avg, p0=guess, maxfev=5000, sigma=atomNum_std)       
+    perr = np.sqrt(np.diag(pcov))
+
+    if doPlot:
+        plt.figure(figsize=(4.5, 3.5))
+        
+        plt.errorbar(time, atomNum_avg, yerr=atomNum_std, fmt='-o', color='k', capsize=3)
+        
+        plt.plot(xfit, func(xfit, *popt), 'r-', label= label % tuple(popt), color='r')
+        plt.xlabel(timeVar + ' (ms)')
+        plt.ylabel(atomNumVar)
+        plt.title(f'$\\tau$ = {popt[1]/1e3:.3f} $\pm$ {perr[1]/1e3:.3f} s')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+    
+    return popt, pcov
