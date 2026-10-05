@@ -29,6 +29,7 @@ import pandas as pd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import pickle
 import warnings
+from scipy.signal import find_peaks, savgol_filter
 
 from ImageAnalysis.ExperimentParameters import ExperimentParams
 
@@ -1054,7 +1055,7 @@ def FitColumnDensity(columnDensities, dx=1, mode='both', yFitMode='single',
             elif yFitMode.lower() == 'multiple':                
                 popt, _, bg = fitMultiGaussian(ydata, dx=dx, 
                                             subtract_bg=subtract_bg, signal_feature=Ysignal_feature, 
-                                            fitbgDeg=3, amp=1, width=3, denoise=1, peakplot=1)                
+                                            fitbgDeg=3, amp=1, width=1, denoise=1, peakplot=1)                
             else: 
                 raise ValueError("The yFitMode shoud be 'single' or 'multiple'.")
                 
@@ -3736,16 +3737,17 @@ def RecognizeCommonPhrase(dataPathList, repetition):
     return conditions, values, distances
 
 
-def multi_gaussian(x, *params):
-    # params = [A1, mu1, sigma1, A2, mu2, sigma2, ...]
-    n = len(params) // 3
+def multi_gaussian_sum(x, *params):
+    # params = [A1, mu1, sigma1, offset1, A2, mu2, sigma2, offset2 ...]
+    n = len(params) // 4
     y = np.zeros_like(x, dtype=float)
     
     for i in range(n):
-        A = params[3*i]
-        mu = params[3*i + 1]
-        sigma = params[3*i + 2]
-        y += A * np.exp(-(x - mu)**2 / (2 * sigma**2))
+        A = params[4*i]
+        mu = params[4*i + 1]
+        sigma = params[4*i + 2]
+        offset = params[4*i + 3]
+        y += A * np.exp(-(x - mu)**2 / (2 * sigma**2)) + offset
     
     return y
 
@@ -4054,3 +4056,121 @@ def fit_exponential_v2(df, timeVar='wait', atomNumVar='YatomNumber', offset=None
         plt.tight_layout()
     
     return popt, pcov
+
+
+
+def ExtractGaussianCenter_Basler(paths_bas, ROI, doPlot=False):
+    
+    fullpath_bas = GetFullFilePaths(paths_bas)
+
+    imgs_basler = GetImages(fullpath_bas, 'Basler', ROI, None)
+
+    df = pd.DataFrame(columns=['Xcenter', 'Ycenter', 'Xwidth', 'Ywidth', 'Xamp', 'Yamp'])
+
+    Xcenters = []; Ycenters = []; Xwidths = []; Ywidths = []; Xamps = []; Yamps = []
+
+    for image_arr in imgs_basler:
+        
+        paramX, paramY = FitGaussian(image_arr, doPlot, 'Wide')
+        
+        Xcenter = paramX[0]
+        Xwidth = paramX[1]
+        
+        Ycenter = paramY[0]
+        Ywidth = paramY[1]
+        
+        Xcenters.append(Xcenter); Ycenters.append(Ycenter)
+        Xwidths.append(Xwidth); Ywidths.append(Ywidth)
+        Xamps.append(paramX[2]); Yamps.append(paramY[2])
+            
+    df['Xcenter'] = Xcenters; df['Ycenter'] = Ycenters
+    df['Xwidth'] = Xwidths; df['Ywidth'] = Ywidths
+    df['Xamp'] = Xamps; df['Yamp'] = Yamps 
+    
+    return df
+
+
+
+# 
+def FitColumnDensity_MultiGaussianY(columnDensities, dx=1, centersOnly=False, doPlot=True):
+    
+    popts = [];
+    centers = []
+    
+    # fit along Y
+    CD1D = np.nansum(columnDensities, axis=2) * dx / 1e6**2    
+    
+    for ii, ydata in enumerate(CD1D):
+            
+        xdata = np.arange(len(ydata))
+        smoothed = savgol_filter(ydata, window_length=29, polyorder=2)
+        
+        # assuming two peaks
+        peaks, props = find_peaks(
+            smoothed,
+            height = np.max(smoothed)*0.2,
+            # distance=20
+        )
+        
+        if len(peaks) == 2:
+            
+            guess_a1, guess_a2 = ydata[peaks]
+            guess_c1, guess_c2 = peaks
+            guess_sigma = 10
+            guess_offset = 0
+            
+            guess = [guess_a1, guess_c1, guess_sigma, guess_offset, guess_a2, guess_c2, guess_sigma, guess_offset]
+            
+            popt, pcov = curve_fit(multi_gaussian_sum, xdata, ydata, p0=guess)
+            
+            popts.append(popt)
+            centers.append(np.array([popt[1], popt[5]]))
+            
+            if doPlot:
+                x_fit = np.linspace(xdata[0], xdata[-1], len(xdata)*3)
+                
+                plt.figure()
+                plt.plot(xdata, ydata)
+                plt.plot(x_fit, multi_gaussian_sum(x_fit, *popt))
+                plt.tight_layout()
+        
+        else:
+            print('-----------')
+            print(f'Incorrect peak number detected ({len(peaks)})')
+            print('-----------')
+            
+        
+    if centersOnly:
+        return centers   
+    else:
+        return popts
+
+
+def ID_misaligned_beams(centers):
+    """Automatically identifies stationary first pass and moving second pass from pair coordinates
+    by finding the peak candidate that minimizes variance across all images.
+    """
+    all_peaks = np.concatenate(centers)
+
+    best_seed = None
+    min_std = float("inf")
+
+    # Evaluate each fitted peak across all images as a potential candidate for first pass
+    for candidate in all_peaks:
+        trajectory = [
+            pair[np.argmin(np.abs(pair - candidate))] for pair in centers
+        ]
+        std = np.std(trajectory)
+        if std < min_std:
+            min_std = std
+            best_seed = candidate
+
+    # Separate first pass and second pass using the optimal seed
+    pass1 = []
+    pass2 = []
+    for pair in centers:
+        b1_idx = np.argmin(np.abs(pair - best_seed))
+        pass1.append(pair[b1_idx])
+        pass2.append(pair[1 - b1_idx])
+
+    return np.array(pass1), np.array(pass2)
