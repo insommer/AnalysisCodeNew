@@ -33,6 +33,8 @@ from scipy.signal import find_peaks, savgol_filter
 
 from ImageAnalysis.ExperimentParameters import ExperimentParams
 
+MASS = 9.9883414e-27
+
 def GetDataLocation(date, DataPath=r'D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data'):
     warnings.warn("GetDataLocation will be replaced with GetDayFolder(date, root= )", DeprecationWarning, stacklevel=2)
     return os.path.join(DataPath, datetime.datetime.strptime(date, '%m/%d/%Y').strftime('%Y/%m-%Y/%d %b %Y'))
@@ -3858,7 +3860,7 @@ def saveResultsDF(df, dayfolder, save_pickle=False, save_csv=True):
                 
 
 def PhaseSpaceDensity_AspectRatio(atomNum, sigmaY, aspectRatio, T):
-    waveLengthCubed = constants.h**3 / (2 * np.pi * 9.9883414e-27 * constants.k * T)**1.5
+    waveLengthCubed = constants.h**3 / (2 * np.pi * MASS * constants.k * T)**1.5
     
     s1 = sigmaY
     s2 = sigmaY
@@ -3913,6 +3915,36 @@ def AtomDensity_AddToDF(df, cloudType='ODT'):
     
     df_new = pd.concat([df, n], axis=1)
     df_new = df_new.rename(columns={0:'Density cm3'})
+    
+    return df_new
+
+
+def FermiEnergy_fromDensity(n_cm3, energy_unit='uK'):
+    
+    # assume n in cubic cm
+    n_m3 = n_cm3 * 1e6
+    
+    # assume only one spin state is being imaged
+    kF = (6 * np.pi**2 * n_m3)**(1/3)
+    
+    eF = (constants.hbar)**2 * kF**2 / (2*MASS)
+    
+    if energy_unit == 'J':
+        return eF
+    elif energy_unit == 'K':
+        return eF / constants.Boltzmann
+    elif energy_unit == 'uK':
+        return eF / constants.Boltzmann * 1e6
+    
+
+def FermiEnergy_AddToDF(df, unit='uK'):
+    
+    # assume dataframe includes density in cm-3
+    n_cm3 = df['Density cm3']
+    eF = FermiEnergy_fromDensity(n_cm3, energy_unit=unit)
+    eF = eF.rename(f'Fermi Energy {unit}')
+    
+    df_new = pd.concat([df, eF], axis=1)
     
     return df_new
 
@@ -4055,7 +4087,7 @@ def fit_exponential_v2(df, timeVar='wait', atomNumVar='YatomNumber', offset=None
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
     
-    return popt, pcov
+    return popt, perr
 
 
 
