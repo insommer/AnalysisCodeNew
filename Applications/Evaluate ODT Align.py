@@ -12,9 +12,9 @@ import os
 #Set the date and the folder name
 ####################################
 dataRootFolder =r"D:\Dropbox (Lehigh University)\Sommer Lab Shared\Data"
-date = '1/8/2025'
+date = '10/4/2026'
 
-ODT_Position = '1900'
+ODT_Position = '1620'
 task = 'Misalign'
 # task = 'Align'
 expectedValues = [None, None]
@@ -38,9 +38,9 @@ variablesToDisplay = [
                     # 'Coil_medB', 
                        'ODT Misalign', 
                        'ODT Position',
-                      'ZSBiasCurrent',
-                      'VerticalBiasCurrent',
-                       'CamBiasCurrent'
+                      # 'ZSBiasCurrent',
+                      # 'VerticalBiasCurrent',
+                      #  'CamBiasCurrent'
                       ]
 showTimestamp = False
 # variablesToDisplay=None
@@ -59,47 +59,18 @@ subtract_bg = 0
 signal_feature = 'narrow' 
 signal_width = 10 #The narrower the signal, the bigger the number.
 fitbgDeg = 5
-rotateAngle= 1.5 #rotates ccw
+rotateAngle= -1.5 #rotates ccw
 
-rowstart = 10
-rowend = -10
-columnstart = 10
-columnend = -10
+# rowstart = 10
+# rowend = -10
+# columnstart = 10
+# columnend = -10
 
+rowstart = 500
+rowend = 1000
+columnstart= 10
+columnend= -10
 
-columnstart=600
-columnend= 1150
-
-rowstart = 200
-rowend = 600
-
-
-# columnstart=800
-# columnend=1150 
-
-# columnstart=500
-# columnend=800
-
-# columnstart=300
-# columnend=1000 
-
-# rowstart = 600
-# rowend = -700
-
-# rowstart = 250
-# rowend = 500
-
-# rowstart = 1000	#ODT 400
-# rowend = 1125	
-
-# rowstart -= 200
-# rowend += 200
-
-# rowstart += 20
-# rowend -= 20
-
-# columnstart -= 300
-# columnend += 300
 
 
 ####################################
@@ -172,12 +143,12 @@ center_Basler = [ii[1] for ii in popt_Basler]
 dfjoin = results[['ODT_Misalign', 'Ycenter', 'Ywidth', 'YatomNumber']].copy()
 dfjoin['center_Basler'] = center_Basler
 
-if task.startswith('Align'):
+if task.startswith('Misalign'):
     ImageAnalysisCode.odtAlign(dfjoin, *expectedValues, repetition=repetition,
                                rcParams=rcParams)
     
-elif task.startswith('Misalign'):
-    ImageAnalysisCode.odtMisalign(dfjoin, rcParams=rcParams)
+# elif task.startswith('Misalign'):
+#     ImageAnalysisCode.odtMisalign(dfjoin, rcParams=rcParams)
 
 # %%
 if intermediatePlot:

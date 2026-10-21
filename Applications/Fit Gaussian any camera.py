@@ -16,21 +16,20 @@ plt.close('all')
 
 dataRootFolder = r"D:\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data"
 
-date = '8/19/2026'
+date = '10/12/2026'
 
 camera = 'Basler'
 
 data_folder = [
-    # fr'{camera}/CATauxBeamInitial_with100mmLens',
-    # fr'{camera}/CATauxBeamInitial_with100mmLens_117.5 mm'
-    # fr'{camera}/LogPDpath 331 mm',
-    # fr'{camera}/LogPDpath 349 mm',
-    # fr'{camera}/LogPDpath 389 mm',
-    fr'{camera}/Cateye y junction output initial 185 mm'
+    # fr'{camera}/Original alignment with sph lenses_beam dump cam',
+    # fr'{camera}/Second pass waist ND2 filte 351 mm power 1.5_1',
+    # fr'{camera}/ODT new mirror mounts beam dump',
+    fr'{camera}/L5 mount 0.5 again'
+    # fr'{camera}/L5 mount 1 adjust horiz back_1'
     ]
 
 
-repetition = 6
+repetition = 3
 commonPhrase = True
 quantity = 'Distance (mm)'
 var2plot = 'Distance'

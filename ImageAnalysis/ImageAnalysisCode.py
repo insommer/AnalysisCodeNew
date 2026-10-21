@@ -3771,7 +3771,7 @@ def Plot_2Dscan_Errbars(df, scanVar1, scanVar2, dependentVar, depVarScale=1):
     -----------
     Plots with error bars the dependentVar vs scanVar1 for each value of scanVar2 given
     '''
-    fig,ax = plt.subplots(figsize=(6,5))
+    fig,ax = plt.subplots(figsize=(5,4))
    
     stats = df.groupby([scanVar1, scanVar2])[dependentVar].agg(['mean','std']).reset_index()
    
@@ -3784,6 +3784,8 @@ def Plot_2Dscan_Errbars(df, scanVar1, scanVar2, dependentVar, depVarScale=1):
     # ax.legend(loc='upper right')
     ax.legend()
     ax.grid(True,alpha=0.3)
+    plt.tight_layout()
+
 
 
 def FilterDataframe(df, col1, threshold, col2=None):
@@ -4012,12 +4014,16 @@ def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
    
     # Filter for minimum TOF values
     df2_mean = dfmean.reset_index(level=fitXVar)
-    df2_mean = df2_mean[df2_mean[fitXVar] == df2_mean[fitXVar].min()]
+    df2_mean = df2_mean[df2_mean[fitXVar] == 0]
    
     df2_std = dfstd.reset_index(level=fitXVar)
-    df2_std = df2_std[df2_std[fitXVar] == df2_std[fitXVar].min()]
+    df2_std = df2_std[df2_std[fitXVar] == 0]
    
+    
+    # if 'Density cm3' in 
+    
     # Value assignment
+    # Assuming shape of ODT on Andor camera
     N, T = df2_mean[atomNum], df1['T (K)']
     s1 = df2_mean[sigma1] * 2**0.5 / 1e6
     s2 = df2_mean[sigma2] / 1e6
@@ -4030,9 +4036,9 @@ def multiVariableThermometry_v2(df, *variables, fitXVar='TOF', fitYVar='Ywidth',
     ds3 = df2_std[sigma3] / 1e6
    
     # PSD Calculation
-    # psd_values = PhaseSpaceDensity(N, s1, s2, s3, T)
-    aspectRatio = 0.12
-    psd_values = PhaseSpaceDensity_AspectRatio(N, s2, aspectRatio, T)
+    psd_values = PhaseSpaceDensity(N, s1, s2, s3, T)
+    # aspectRatio = 0.12
+    # psd_values = PhaseSpaceDensity_AspectRatio(N, s2, aspectRatio, T)
     df1['PSD'] = psd_values
    
     # Error Propagation Formula for PSD
@@ -4070,7 +4076,7 @@ def fit_exponential_v2(df, timeVar='wait', atomNumVar='YatomNumber', offset=None
         func = lambda x,a,tau: exponential(x,a,tau,0)
         guess = [A, Tau]
         label = ' A=%5.2e\n$ \\tau$=%5.3e\n C=0 (Fixed)'
-        
+            
     popt, pcov = curve_fit(func, time, atomNum_avg, p0=guess, maxfev=5000, sigma=atomNum_std)       
     perr = np.sqrt(np.diag(pcov))
 

@@ -9,13 +9,13 @@ plt.close('all')
 ####################################
 #Set the date and the folder name
 ####################################
+dataRootFolder = r'D:\Lehigh University Dropbox\Ariel Sommer\Sommer Lab Shared\Data'
 
-dataRootFolder = r'C:\Users\wmmax\Documents\Lehigh\Sommer Group\Experiment Data'
 
-date = '10/4/2026'
+date = '10/13/2026'
 
 data_folder = [
-    'ODT 1620 Misalign'
+    'ODT vert realign'
 ]
 
 ####################################
@@ -46,11 +46,9 @@ runParams = {
     'ROI': [
         # rowStart, rowEnd, colStart, colEnd, for each camera
         # [500, 1000, 100, -100], 
-        [500, 1000, 100, -100], 
+        [500, 1100, 10, -10], 
         # [10, -10, 10, -10],
         [10, -10, 10, -10],
-        # [420, 520, 700, 1000],        
-        # [850, 975, 750, 1250]
     ], 
     
     'subtract_bg': [0, 0], 
@@ -134,8 +132,9 @@ for cam in cameras:
 
 centers_andor = ImageAnalysisCode.FitColumnDensity_MultiGaussianY(
     OD['zyla']/params.expmntParams.cross_section,
+    dx=1,
     centersOnly=True,
-    doPlot=False
+    doPlot=0
     )
 
 #%% Beam dump cam Analysis (Basler)
@@ -173,8 +172,8 @@ plt.figure(figsize=(5,4))
 plt.errorbar(ANDOR_COOR, BASLER_COOR, yerr=BASLER_COOR_std, xerr=ANDOR_COOR_std, fmt='-o', capsize=3)
 plt.plot(targetpos_andor, pass2_target_andor, '*r', label=f'Basler target = {int(pass2_target_andor)}')
 
-plt.axhline(pass2_target_andor, ls='--', color='r', alpha=0.3)
-plt.axvline(targetpos_andor, ls='--', color='r', alpha=0.3)
+plt.axhline(pass2_target_andor, ls=':', color='r', alpha=0.3)
+plt.axvline(targetpos_andor, ls='-.', color='r', alpha=0.3, label='first pass Andor Y coor')
 
 
 plt.xlabel('Andor Y coordinate')
@@ -188,7 +187,7 @@ plt.tight_layout()
 
 for cam in cameras:
     
-    intermediatePlot = 1
+    intermediatePlot = 0
     plotPWindow = 6
     plotRate = 1
     uniformscale = 0.5
